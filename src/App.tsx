@@ -208,21 +208,21 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`
-        grid grid-cols-[90px_70px_1fr_1.5fr_1fr_60px] items-center gap-4 px-5 rounded-2xl transition-all cursor-default flex-1
+        grid grid-cols-[110px_80px_1fr_1.5fr_1fr_70px] items-center gap-5 px-6 rounded-2xl transition-all cursor-default flex-1
         ${isLive ? 'bg-eqc-green text-white shadow-xl' : isBreak ? 'bg-orange-500 text-white shadow-lg' : 'bg-white border border-gray-100 shadow-sm'}
       `}
     >
       {/* Room Number */}
       <div>
-        <h3 className="text-xl font-bold serif leading-none">{room.roomName}</h3>
+        <h3 className="text-2xl font-bold serif leading-none">{room.roomName}</h3>
       </div>
 
       {/* Intake */}
       <div>
         {isLive && room.intake ? (
-          <span className="text-lg font-bold">{room.intake}</span>
+          <span className="text-xl font-bold">{room.intake}</span>
         ) : (
-          <span className={`text-sm italic ${isBreak ? 'text-white/50' : 'text-eqc-muted'}`}>&mdash;</span>
+          <span className={`text-base italic ${isBreak ? 'text-white/50' : 'text-eqc-muted'}`}>&mdash;</span>
         )}
       </div>
 
@@ -230,52 +230,52 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       <div className="flex items-center gap-3 min-w-0">
         {isLive ? (
           <>
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/40 shrink-0 bg-white">
+            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/40 shrink-0 bg-white">
               <img
                 src={trainerImg}
                 alt={room.trainer || 'Unknown'}
                 className="w-full h-full object-cover object-top"
               />
             </div>
-            <span className="font-bold text-base truncate">{room.trainer}</span>
+            <span className="font-bold text-xl truncate">{room.trainer}</span>
           </>
         ) : isBreak ? (
-          <div className="flex items-center gap-2 italic font-bold">
-            <Coffee size={18} />
+          <div className="flex items-center gap-3 italic font-bold text-xl">
+            <Coffee size={24} />
             <span>On Break</span>
           </div>
         ) : (
-          <span className="text-sm text-eqc-muted italic">Available</span>
+          <span className="text-base text-eqc-muted italic">Available</span>
         )}
       </div>
 
       {/* Course */}
       <div className="min-w-0">
         {isLive && room.course ? (
-          <span className="font-bold text-sm leading-tight truncate block">{room.course}</span>
+          <span className="font-bold text-base leading-tight truncate block">{room.course}</span>
         ) : (
-          <span className={`text-sm italic ${isBreak ? 'text-white/50' : 'text-eqc-muted'}`}>&mdash;</span>
+          <span className={`text-base italic ${isBreak ? 'text-white/50' : 'text-eqc-muted'}`}>&mdash;</span>
         )}
       </div>
 
       {/* Topic */}
       <div className="min-w-0">
         {isLive && room.topic ? (
-          <div className="flex items-center gap-1.5 min-w-0">
-            <BookOpen size={14} className="shrink-0 opacity-70" />
-            <span className="text-sm font-medium italic truncate">{room.topic}</span>
+          <div className="flex items-center gap-2 min-w-0">
+            <BookOpen size={18} className="shrink-0 opacity-70" />
+            <span className="text-base font-medium italic truncate">{room.topic}</span>
           </div>
         ) : (
-          <span className={`text-sm italic ${isBreak ? 'text-white/50' : 'text-eqc-muted'}`}>&mdash;</span>
+          <span className={`text-base italic ${isBreak ? 'text-white/50' : 'text-eqc-muted'}`}>&mdash;</span>
         )}
       </div>
 
       {/* Live indicator */}
       <div className="flex justify-end">
         {isLive && (
-          <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-full border border-white/30">
-            <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-            <span className="text-[9px] font-black tracking-widest uppercase">LIVE</span>
+          <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-full border border-white/30">
+            <div className="w-2.5 h-2.5 bg-white rounded-full animate-ping"></div>
+            <span className="text-[10px] font-black tracking-widest uppercase">LIVE</span>
           </div>
         )}
       </div>
@@ -1147,7 +1147,7 @@ export default function App() {
             </div>
 
             {/* Column headers */}
-            <div className="grid grid-cols-[90px_70px_1fr_1.5fr_1fr_60px] gap-4 px-5 mb-2 shrink-0">
+            <div className="grid grid-cols-[110px_80px_1fr_1.5fr_1fr_70px] gap-5 px-6 mb-2 shrink-0">
               <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Room</span>
               <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Intake</span>
               <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Trainer</span>
