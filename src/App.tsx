@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useMemo, FormEvent } from 'react';
+import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import {
   Clock,
   MapPin,
@@ -11,11 +11,6 @@ import {
   Mail,
   Flame,
   BriefcaseMedical,
-  Sun,
-  CloudRain,
-  Cloud,
-  Wind,
-  Droplets,
   BookOpen,
   User,
   ExternalLink,
@@ -42,8 +37,9 @@ import {
   Save
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react';
+import { db } from './firebase';
+import { collection, doc, setDoc, deleteDoc, getDoc, onSnapshot } from 'firebase/firestore';
 
 // --- Types ---
 
@@ -79,12 +75,6 @@ interface Announcement {
   text: string;
   color: string;
   expiresAt: string;
-}
-
-interface WeatherDay {
-  day: string;
-  temp: { high: number; low: number };
-  condition: 'sunny' | 'rainy' | 'cloudy' | 'partly-cloudy';
 }
 
 // --- Demo / Static Mode ---
@@ -134,14 +124,6 @@ const EVENTS: Event[] = [
   }
 ];
 
-const WEATHER_FORECAST: WeatherDay[] = [
-  { day: 'TODAY', temp: { high: 27, low: 19 }, condition: 'partly-cloudy' },
-  { day: 'THU', temp: { high: 27, low: 20 }, condition: 'rainy' },
-  { day: 'FRI', temp: { high: 25, low: 20 }, condition: 'sunny' },
-  { day: 'SAT', temp: { high: 23, low: 20 }, condition: 'partly-cloudy' },
-  { day: 'SUN', temp: { high: 23, low: 22 }, condition: 'partly-cloudy' },
-];
-
 // --- Components ---
 
 const Header = () => {
@@ -189,7 +171,7 @@ const Header = () => {
         </div>
       </div>
       <div className="flex items-center gap-4 text-right">
-        <HeaderWeather />
+        <Forecast7Widget />
         <div className="flex items-center gap-5 bg-gray-50 px-6 h-20 rounded-2xl border border-gray-100">
           <span className="text-lg font-bold text-eqc-muted tracking-tight">{formattedDate}</span>
           <div className="w-px h-12 bg-gray-300" />
@@ -361,122 +343,29 @@ const EventList = ({ events }: { events: Event[] }) => {
   );
 };
 
-const WeatherIcon = ({ condition, size = 24 }: { condition: WeatherDay['condition'], size?: number }) => {
-  switch (condition) {
-    case 'sunny': return <Sun size={size} className="text-yellow-500" />;
-    case 'rainy': return <CloudRain size={size} className="text-blue-400" />;
-    case 'cloudy': return <Cloud size={size} className="text-gray-400" />;
-    case 'partly-cloudy': return <div className="relative"><Sun size={size} className="text-yellow-500" /><Cloud size={size * 0.7} className="text-gray-300 absolute -bottom-1 -right-1" /></div>;
-    default: return <Sun size={size} className="text-yellow-500" />;
-  }
-};
-
-interface LiveWeather {
-  temperature: number;
-  feelsLike: number;
-  humidity: number;
-  windSpeed: number;
-  condition: WeatherDay['condition'];
-  conditionText: string;
-  forecast: WeatherDay[];
-}
-
-function mapWeatherCode(code: number): { condition: WeatherDay['condition']; text: string } {
-  if (code <= 1) return { condition: 'sunny', text: 'Clear skies' };
-  if (code <= 3) return { condition: 'partly-cloudy', text: 'Partly cloudy' };
-  if (code <= 48) return { condition: 'cloudy', text: 'Overcast' };
-  if (code <= 67 || (code >= 80 && code <= 82)) return { condition: 'rainy', text: 'Rain' };
-  return { condition: 'cloudy', text: 'Cloudy' };
-}
-
-const useWeather = () => {
-  const [weather, setWeather] = useState<LiveWeather | null>(null);
-
+const Forecast7Widget = () => {
+  const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const fetchWeather = async () => {
-      try {
-        const res = await fetch(
-          'https://api.open-meteo.com/v1/forecast?latitude=-31.95&longitude=115.86&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=Australia%2FPerth&forecast_days=5'
-        );
-        const data = await res.json();
-        const current = data.current;
-        const daily = data.daily;
-        const { condition, text } = mapWeatherCode(current.weather_code);
-
-        const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-        const forecast: WeatherDay[] = daily.time.map((date: string, i: number) => {
-          const d = new Date(date);
-          return {
-            day: i === 0 ? 'TODAY' : dayNames[d.getDay()],
-            temp: { high: Math.round(daily.temperature_2m_max[i]), low: Math.round(daily.temperature_2m_min[i]) },
-            condition: mapWeatherCode(daily.weather_code[i]).condition,
-          };
-        });
-
-        setWeather({
-          temperature: Math.round(current.temperature_2m),
-          feelsLike: Math.round(current.apparent_temperature),
-          humidity: current.relative_humidity_2m,
-          windSpeed: Math.round(current.wind_speed_10m),
-          condition,
-          conditionText: text,
-          forecast,
-        });
-      } catch {
-        setWeather({
-          temperature: 22,
-          feelsLike: 19,
-          humidity: 63,
-          windSpeed: 25,
-          condition: 'partly-cloudy',
-          conditionText: 'Partly cloudy',
-          forecast: WEATHER_FORECAST,
-        });
-      }
-    };
-
-    fetchWeather();
-    const interval = setInterval(fetchWeather, 15 * 60 * 1000);
-    return () => clearInterval(interval);
+    if (!ref.current) return;
+    while (ref.current.firstChild) ref.current.removeChild(ref.current.firstChild);
+    const a = document.createElement('a');
+    a.className = 'weatherwidget-io';
+    a.href = 'https://forecast7.com/en/n31d95115d86/perth/';
+    a.setAttribute('data-label_1', 'PERTH');
+    a.setAttribute('data-label_2', 'Weather');
+    a.setAttribute('data-theme', 'pure');
+    a.setAttribute('data-days', '3');
+    a.setAttribute('data-highcolor', '#1a7a54');
+    a.textContent = 'PERTH Weather';
+    ref.current.appendChild(a);
+    const existing = document.getElementById('weatherwidget-io-js');
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.id = 'weatherwidget-io-js';
+    script.src = 'https://weatherwidget.io/js/widget.min.js';
+    document.body.appendChild(script);
   }, []);
-
-  return weather;
-};
-
-const HeaderWeather = () => {
-  const weather = useWeather();
-  if (!weather) {
-    return (
-      <div className="flex items-center gap-3 px-5 h-20 bg-gray-50 rounded-2xl border border-gray-100">
-        <Sun size={28} className="text-gray-300 animate-pulse" />
-        <span className="text-sm text-eqc-muted font-medium">Loading weather...</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex items-center gap-4 px-5 h-20 bg-gray-50 rounded-2xl border border-gray-100">
-      <WeatherIcon condition={weather.condition} size={40} />
-      <div className="flex flex-col leading-tight">
-        <div className="flex items-baseline gap-1">
-          <span className="text-3xl font-bold serif text-eqc-text leading-none">{weather.temperature}</span>
-          <span className="text-lg font-bold serif text-eqc-text leading-none">°C</span>
-        </div>
-        <span className="text-xs font-medium text-eqc-muted">{weather.conditionText}</span>
-      </div>
-      <div className="w-px h-12 bg-gray-300 mx-1" />
-      <div className="flex flex-col gap-1.5">
-        <div className="flex items-center gap-1.5 text-xs text-eqc-muted">
-          <Droplets size={12} className="text-blue-400" />
-          <span className="font-bold">{weather.humidity}%</span>
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-eqc-muted">
-          <Wind size={12} className="text-gray-400" />
-          <span className="font-bold">{weather.windSpeed} km/h</span>
-        </div>
-      </div>
-    </div>
-  );
+  return <div ref={ref} className="overflow-hidden rounded-2xl" style={{ width: 320, height: 80 }} />;
 };
 
 const AdminHub = ({
@@ -514,48 +403,58 @@ const AdminHub = ({
       return;
     }
     try {
-      const res = await fetch("/api/admin-login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password })
-      });
-      const json = await res.json();
-      if (res.ok && json.ok) {
+      const configDoc = await getDoc(doc(db, 'config', 'admin'));
+      const adminPassword = configDoc.exists() ? configDoc.data().password : 'admin';
+      if (password === adminPassword) {
         setIsLoggedIn(true);
         setLoginError("");
       } else {
         setLoginError("Invalid password. Please try again.");
       }
     } catch (err) {
-      setLoginError("Could not reach the server. Try again in a moment.");
+      setLoginError("Could not verify password. Try again in a moment.");
     }
   };
 
   const updateRooms = async (newRooms: RoomAllocation[]) => {
     if (IS_DEMO_MODE) return;
-    await fetch("/api/update-rooms", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "update_all", data: newRooms })
-    });
+    const currentIds = rooms.map(r => r.id);
+    const newIds = newRooms.map(r => r.id);
+    for (const id of currentIds) {
+      if (!newIds.includes(id)) {
+        await deleteDoc(doc(db, 'rooms', `room_${id}`));
+      }
+    }
+    for (const room of newRooms) {
+      await setDoc(doc(db, 'rooms', `room_${room.id}`), { ...room });
+    }
   };
 
   const updateEvents = async (newEvent: Partial<Event>, action: 'update_single' | 'delete') => {
     if (IS_DEMO_MODE) return;
-    await fetch("/api/update-events", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, data: newEvent })
-    });
+    if (action === 'update_single') {
+      const id = newEvent.id || Date.now();
+      await setDoc(doc(db, 'events', `event_${id}`), { ...newEvent, id });
+    } else if (action === 'delete') {
+      await deleteDoc(doc(db, 'events', `event_${newEvent.id}`));
+    }
   };
 
   const updateAnnouncements = async (data: any, action: 'add' | 'delete') => {
     if (IS_DEMO_MODE) return;
-    await fetch("/api/update-announcements", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, data })
-    });
+    if (action === 'add') {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + (data.duration || 1));
+      const id = Date.now();
+      await setDoc(doc(db, 'announcements', `ann_${id}`), {
+        ...data,
+        id,
+        createdAt: new Date().toISOString(),
+        expiresAt: expiresAt.toISOString(),
+      });
+    } else if (action === 'delete') {
+      await deleteDoc(doc(db, 'announcements', `ann_${data.id}`));
+    }
   };
 
   const handleQuickRoomUpdate = (idx: number, field: keyof RoomAllocation, value: string) => {
@@ -1042,7 +941,7 @@ const Footer = ({ onStaffLogin }: { onStaffLogin: () => void }) => {
         </div>
         <div className="flex items-center gap-2">
           <Mail size={14} className="text-eqc-green" />
-          <span className="font-medium">hello@equinimcollege.com</span>
+          <span className="font-medium">team@equinimcollege.com</span>
         </div>
         <div className="flex items-center gap-2">
           <Flame size={14} className="text-orange-500" />
@@ -1139,30 +1038,38 @@ export default function App() {
 
   useEffect(() => {
     if (IS_DEMO_MODE) return;
-    const socket = io();
 
-    socket.on("rooms_updated", (updatedRooms: RoomAllocation[]) => {
-      setRooms(updatedRooms);
+    const unsubRooms = onSnapshot(collection(db, 'rooms'), (snapshot) => {
+      if (!snapshot.empty) {
+        const data = snapshot.docs.map(d => d.data() as RoomAllocation);
+        data.sort((a, b) => a.id - b.id);
+        setRooms(data);
+      }
     });
 
-    socket.on("events_updated", (updatedEvents: Event[]) => {
-      setEvents(updatedEvents);
+    const unsubEvents = onSnapshot(collection(db, 'events'), (snapshot) => {
+      if (!snapshot.empty) {
+        const data = snapshot.docs.map(d => d.data() as Event);
+        data.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        setEvents(data);
+      }
     });
 
-    socket.on("staff_updated", (updatedStaff: StaffMember[]) => {
-      setStaff(updatedStaff);
+    const unsubStaff = onSnapshot(collection(db, 'staff'), (snapshot) => {
+      const data = snapshot.docs.map(d => d.data() as StaffMember);
+      setStaff(data);
     });
 
-    socket.on("announcements_updated", (updatedAnnouncements: Announcement[]) => {
-      setAnnouncements(updatedAnnouncements);
-    });
-
-    socket.on("timesheet_updated", (updatedTimesheet: any[]) => {
-      setTimesheet(updatedTimesheet);
+    const unsubAnnouncements = onSnapshot(collection(db, 'announcements'), (snapshot) => {
+      const data = snapshot.docs.map(d => d.data() as Announcement);
+      setAnnouncements(data.filter(a => new Date(a.expiresAt) > new Date()));
     });
 
     return () => {
-      socket.disconnect();
+      unsubRooms();
+      unsubEvents();
+      unsubStaff();
+      unsubAnnouncements();
     };
   }, []);
 
@@ -1212,21 +1119,7 @@ export default function App() {
 
       <main className="flex-1 flex flex-col p-6 min-h-0 gap-6">
         <div className="flex-1 flex gap-6 min-h-0">
-          {/* Left Column: Floorplan & Upcoming Events */}
-          <div className="w-1/4 shrink-0 flex flex-col min-h-0">
-            {/* Spacer to align with Room 1 tile top (matches center heading + right column spacer) */}
-            <div className="h-8 mb-4 shrink-0" />
-            <div className="flex-1 flex flex-col gap-6 min-h-0">
-              <div className="flex-[3] min-h-0">
-                <FloorPlan />
-              </div>
-              <div className="flex-[2] min-h-0">
-                <EventList events={events} />
-              </div>
-            </div>
-          </div>
-
-          {/* Center Column: Room Allocations */}
+          {/* Left Column: Room Allocations */}
           <div className="flex-1 flex flex-col min-h-0">
             <div className="flex items-center gap-3 h-8 mb-4 shrink-0">
               <div className="w-2.5 h-2.5 bg-eqc-green rounded-full shadow-[0_0_15px_rgba(26,122,84,0.8)] animate-pulse"></div>
@@ -1240,9 +1133,21 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right Column: Campus Map + Mobile View */}
+          {/* Center Column: Floor Plan & Upcoming Events */}
+          <div className="w-1/4 shrink-0 flex flex-col min-h-0">
+            <div className="h-8 mb-4 shrink-0" />
+            <div className="flex-1 flex flex-col gap-6 min-h-0">
+              <div className="flex-[3] min-h-0">
+                <FloorPlan />
+              </div>
+              <div className="flex-[2] min-h-0">
+                <EventList events={events} />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Campus & Nearby + Mobile View */}
           <div className="w-1/4 flex flex-col shrink-0 min-h-0">
-            {/* Spacer to align with Room 1 tile top */}
             <div className="h-8 mb-4 shrink-0" />
             <div className="flex-1 flex flex-col gap-6 min-h-0">
               <CampusMap />

@@ -44,7 +44,7 @@
         <p class="text-sm opacity-90">Your sign-on will update the room allocation board automatically.</p>
       </div>
 
-      <form id="signon-form" class="p-8 space-y-6" onsubmit="handleSubmit(event)">
+      <form id="signon-form" class="p-8 space-y-6">
         <div>
           <label class="block text-sm font-bold text-gray-700 mb-2">Your Name *</label>
           <input type="text" name="name" required class="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 ring-eqc-green focus:border-transparent outline-none transition-shadow" placeholder="e.g. Sarah Johnson" />
@@ -95,18 +95,31 @@
     </div>
   </main>
 
-  <script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
+    import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+
+    const app = initializeApp({
+      apiKey: "AIzaSyAFB1f3hrr1nPtH_DDG6fkAq_VhkjDUBP4",
+      authDomain: "eqc-dashboard-by-25g.firebaseapp.com",
+      projectId: "eqc-dashboard-by-25g",
+      storageBucket: "eqc-dashboard-by-25g.firebasestorage.app",
+      messagingSenderId: "53462073983",
+      appId: "1:53462073983:web:865a9336b39e3d4ec7f54a"
+    });
+    const db = getFirestore(app);
+
     document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-    function handleRoomChange(select) {
+    window.handleRoomChange = function(select) {
       document.getElementById('custom-room').classList.toggle('hidden', select.value !== 'other');
-    }
+    };
 
-    function handleCourseChange(select) {
+    window.handleCourseChange = function(select) {
       document.getElementById('custom-course').classList.toggle('hidden', select.value !== 'other');
-    }
+    };
 
-    async function handleSubmit(e) {
+    document.getElementById('signon-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       const form = e.target;
       const formData = new FormData(form);
@@ -137,66 +150,30 @@
           topics: formData.get('topics') || 'Class in session'
         };
 
-        // Detect static-preview deploys (e.g. GitHub Pages) where there's no
-        // backend to post to. The check is: try a HEAD on /api/admin-login;
-        // if it 404s with HTML we're on a static host.
-        const probe = await fetch('/api/admin-login', { method: 'HEAD' }).catch(() => null);
-        const isStaticPreview = !probe || probe.status === 404;
-        if (isStaticPreview) {
-          errorEl.textContent = 'This is a static preview of the dashboard. Visit the live site to sign on.';
-          errorEl.classList.remove('hidden');
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Sign On & Update Board';
-          return;
-        }
-
-        const res = await fetch('/api/staff-signon', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+        const staffId = Date.now();
+        await setDoc(doc(db, 'staff', 'staff_' + staffId), {
+          name: payload.name,
+          room: room,
+          course: course,
+          intake: payload.intake || '',
+          topics: payload.topics,
+          id: String(staffId),
+          timestamp: new Date().toISOString()
         });
 
-        if (!res.ok) throw new Error('Server error');
-
-        // Also update the room allocation directly
         const roomNum = parseInt(room.replace('Room ', ''));
-        if (!isNaN(roomNum) && roomNum >= 1 && roomNum <= 6) {
-          await fetch('/api/update-rooms', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'update_single',
-              data: {
-                id: roomNum,
-                roomName: room,
-                status: 'live',
-                course: course,
-                trainer: payload.name,
-                intake: payload.intake,
-                topic: payload.topics
-              }
-            })
-          });
-        } else {
-          await fetch('/api/update-rooms', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              action: 'update_single',
-              data: {
-                id: Date.now(),
-                roomName: room,
-                status: 'live',
-                course: course,
-                trainer: payload.name,
-                intake: payload.intake,
-                topic: payload.topics
-              }
-            })
-          });
-        }
+        const roomId = (!isNaN(roomNum) && roomNum >= 1 && roomNum <= 6) ? roomNum : staffId;
+        await setDoc(doc(db, 'rooms', 'room_' + roomId), {
+          id: roomId,
+          roomName: room,
+          status: 'live',
+          course: course,
+          trainer: payload.name,
+          intake: payload.intake || '',
+          topic: payload.topics
+        });
 
-        document.getElementById('success-details').textContent = `${payload.name} - ${room} - ${course}`;
+        document.getElementById('success-details').textContent = payload.name + ' - ' + room + ' - ' + course;
         document.getElementById('form-container').classList.add('hidden');
         document.getElementById('success-message').classList.remove('hidden');
       } catch (err) {
@@ -206,15 +183,15 @@
         submitBtn.disabled = false;
         submitBtn.textContent = 'Sign On & Update Board';
       }
-    }
+    });
 
-    function resetForm() {
+    window.resetForm = function() {
       document.getElementById('form-container').classList.remove('hidden');
       document.getElementById('success-message').classList.add('hidden');
       document.getElementById('signon-form').reset();
       document.getElementById('custom-room').classList.add('hidden');
       document.getElementById('custom-course').classList.add('hidden');
-    }
+    };
   </script>
 </body>
 </html>
