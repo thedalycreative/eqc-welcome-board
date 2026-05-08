@@ -208,7 +208,7 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`
-        grid grid-cols-[90px_70px_1fr_1.5fr_1fr_60px] items-center gap-4 px-5 py-3 rounded-2xl transition-all cursor-default
+        grid grid-cols-[90px_70px_1fr_1.5fr_1fr_60px] items-center gap-4 px-5 rounded-2xl transition-all cursor-default flex-1
         ${isLive ? 'bg-eqc-green text-white shadow-xl' : isBreak ? 'bg-orange-500 text-white shadow-lg' : 'bg-white border border-gray-100 shadow-sm'}
       `}
     >
@@ -230,7 +230,7 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       <div className="flex items-center gap-3 min-w-0">
         {isLive ? (
           <>
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/40 shrink-0 bg-black/10">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/40 shrink-0 bg-white">
               <img
                 src={trainerImg}
                 alt={room.trainer || 'Unknown'}
