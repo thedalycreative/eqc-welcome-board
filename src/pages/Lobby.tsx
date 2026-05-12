@@ -32,7 +32,7 @@ const INITIAL_ROOMS: RoomAllocation[] = IS_DEMO_MODE
   ? [
       { id: 1, roomName: 'Room 1', status: 'live', course: 'ICT40120 - Cert IV in Cyber Security', trainer: 'Tim', intake: '25g', topic: 'Network Defence' },
       { id: 2, roomName: 'Room 2', status: 'live', course: 'ICT50220 - Dip of IT', trainer: 'Saxon', intake: '26b', topic: 'Cloud Architecture' },
-      { id: 3, roomName: 'Room 3', status: 'break' },
+      { id: 3, roomName: 'Room 3', status: 'break', course: 'ICT40120 - Cert IV in Cyber Security', trainer: 'Sarah', intake: '25f', topic: 'Ethical Hacking', breakUntil: new Date(Date.now() + 15 * 60000).toISOString() },
       { id: 4, roomName: 'Room 4', status: 'live', course: 'BSB50120 - Dip of Business', trainer: 'Emma', intake: '25g', topic: 'Service Excellence' },
       { id: 5, roomName: 'Room 5', status: 'live', course: 'ICT30120 - Cert III in IT', trainer: 'Nobody Special', intake: '26a', topic: 'Intro to Programming' },
       { id: 6, roomName: 'Room 6', status: 'available' },
@@ -126,7 +126,6 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
   const trainerImg = getTrainerImagePath(room.trainer);
   const [, forceTick] = useState(0);
 
-  // Re-render every 30s so break countdowns stay accurate.
   useEffect(() => {
     if (!isBreak) return;
     const id = setInterval(() => forceTick(n => n + 1), 30_000);
@@ -140,73 +139,68 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       className={`
-        grid grid-cols-[140px_1fr_120px] items-center gap-6 px-6 py-4 rounded-2xl transition-all cursor-default flex-1
+        flex flex-row items-center justify-between px-6 py-4 rounded-2xl transition-all cursor-default flex-1
         ${isLive ? 'bg-eqc-green text-white shadow-xl' : isBreak ? 'bg-orange-500 text-white shadow-lg' : isInactive ? 'bg-gray-300 text-gray-500 shadow-sm' : 'bg-white border border-gray-100 shadow-sm'}
       `}
     >
-      {/* Room number — dominant */}
-      <div>
-        <h3 className="font-display font-bold text-5xl leading-none tracking-tight">{room.roomName.replace('Room ', '')}</h3>
-        <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 block ${isLive || isBreak ? 'text-white/70' : isInactive ? 'text-gray-500' : 'text-eqc-muted'}`}>
-          {room.roomName.startsWith('Room ') ? 'Room' : ''}
-        </span>
+      <div className="flex flex-row items-center gap-6">
+        <div className={`w-20 h-20 rounded-full flex items-center justify-center shrink-0 ${
+          isLive ? 'bg-white/20' : isBreak ? 'bg-white/20' : isInactive ? 'bg-gray-200' : 'bg-gray-100'
+        }`}>
+          <span className="font-sans font-bold text-4xl leading-[0] translate-y-px">{room.roomName.replace('Room ', '')}</span>
+        </div>
+        {hasContent && room.trainer ? (
+          <>
+            <div className={`w-16 h-16 rounded-full overflow-hidden border-3 shrink-0 bg-white ${isInactive ? 'border-gray-200' : 'border-white/40'}`}>
+              <img src={trainerImg} alt={room.trainer} className="w-full h-full object-cover object-top" />
+            </div>
+            <span className="font-sans font-semibold text-4xl leading-none">{room.trainer}</span>
+            {room.intake && (
+              <>
+                <span className="text-4xl opacity-30">·</span>
+                <span className="font-sans font-medium text-4xl leading-none">{room.intake}</span>
+              </>
+            )}
+          </>
+        ) : isBreak ? (
+          <>
+            <Coffee size={32} />
+            <span className="font-sans font-semibold text-4xl leading-none italic">On Break</span>
+          </>
+        ) : (
+          <span className="font-sans text-2xl leading-none italic opacity-80">Available for study</span>
+        )}
       </div>
 
-      {/* Centre column: trainer (with dot) + intake on top row, course + topic below */}
-      <div className="min-w-0 space-y-1">
-        {hasContent && room.trainer ? (
-          <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-12 h-12 rounded-full overflow-hidden border-2 shrink-0 bg-white ${isInactive ? 'border-gray-200' : 'border-white/40'}`}>
-              <img src={trainerImg} alt={room.trainer || 'Unknown'} className="w-full h-full object-cover object-top" />
-            </div>
-            <div className="flex items-baseline gap-3 min-w-0 flex-1">
-              <span className="font-sans font-medium text-2xl truncate leading-none">{room.trainer}</span>
-              {room.intake && (
-                <span className={`font-sans text-xl shrink-0 leading-none ${isLive || isBreak ? 'text-white/80' : isInactive ? 'text-gray-500' : 'text-eqc-muted'}`}>
-                  · {room.intake}
-                </span>
-              )}
-            </div>
-          </div>
-        ) : isBreak ? (
-          <div className="flex items-center gap-3 italic font-bold text-2xl">
-            <Coffee size={24} />
-            <span>On Break</span>
-          </div>
-        ) : (
-          <span className="text-lg italic opacity-80">Available for study</span>
-        )}
-
+      <div className="flex items-center gap-4">
         {hasContent && (room.course || room.topic) && (
-          <div className={`flex items-center gap-3 flex-wrap text-base ${isLive || isBreak ? 'text-white/85' : isInactive ? 'text-gray-500' : 'text-eqc-muted'}`}>
-            {room.course && <span className="truncate font-medium max-w-full">{room.course}</span>}
-            {room.course && room.topic && <span className="opacity-50">·</span>}
+          <div className="flex flex-col items-end gap-1 text-right">
+            {room.course && (
+              <span className={`font-sans text-base truncate max-w-[300px] ${isLive || isBreak ? 'text-white/80' : isInactive ? 'text-gray-500' : 'text-eqc-muted'}`}>
+                {room.course}
+              </span>
+            )}
             {room.topic && (
-              <span className="flex items-center gap-1.5 italic truncate">
-                <BookOpen size={14} className="shrink-0 opacity-70" />
+              <span className={`font-sans text-base italic truncate max-w-[300px] ${isLive || isBreak ? 'text-white/70' : isInactive ? 'text-gray-500' : 'text-eqc-muted'}`}>
                 {room.topic}
               </span>
             )}
           </div>
         )}
-      </div>
-
-      {/* Status blinker */}
-      <div className="flex justify-end">
         {isLive && (
-          <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-full border border-white/30">
+          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full border border-white/30 shrink-0">
             <div className="w-2.5 h-2.5 bg-white rounded-full animate-ping" />
-            <span className="text-sm font-black tracking-widest uppercase">LIVE</span>
+            <span className="text-base font-black tracking-widest uppercase">LIVE</span>
           </div>
         )}
-        {isBreak && breakRemaining && (
-          <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-full border border-white/30">
-            <Coffee size={14} />
-            <span className="text-base font-black tracking-wider uppercase tabular-nums">{breakRemaining}</span>
+        {isBreak && (
+          <div className="flex items-center gap-2 bg-white/20 px-4 py-2 rounded-full border border-white/30 shrink-0">
+            <Coffee size={18} />
+            <span className="text-lg font-black tracking-wider uppercase tabular-nums">{breakRemaining || 'BREAK'}</span>
           </div>
         )}
         {isInactive && (
-          <span className="text-sm font-black tracking-widest uppercase opacity-70">Signed off</span>
+          <span className="text-base font-black tracking-widest uppercase opacity-70">Signed off</span>
         )}
       </div>
     </motion.div>
@@ -269,15 +263,6 @@ const EventList = ({ events }: { events: Event[] }) => {
           </AnimatePresence>
         )}
 
-        {events.length > 1 && (
-          <motion.div
-            key={`progress-${currentIdx}`}
-            initial={{ width: '0%' }}
-            animate={{ width: '100%' }}
-            transition={{ duration: EVENT_INTERVAL_MS / 1000, ease: 'linear' }}
-            className="absolute bottom-0 left-0 h-0.5 bg-eqc-green/40 rounded-full"
-          />
-        )}
       </div>
 
       <div className="mt-4 pt-3 border-t border-gray-100 text-[10px] text-eqc-muted shrink-0 flex justify-between items-center">
@@ -319,13 +304,13 @@ const Forecast7Widget = () => {
 
 const CampusMap = () => {
   return (
-    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-lg flex-1 flex flex-col overflow-hidden">
+    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-lg h-full flex flex-col overflow-hidden">
       <div className="flex items-center gap-3 mb-4 shrink-0">
         <MapPin size={24} className="text-eqc-green" />
         <h2 className="text-2xl font-display font-bold">Campus & Nearby</h2>
       </div>
       <div className="flex-1 flex flex-col gap-4 overflow-hidden">
-        <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 shadow-inner min-h-0">
+        <div className="flex-[3] rounded-xl overflow-hidden border border-gray-100 shadow-inner min-h-0">
           <iframe
             title="Campus Map"
             width="100%"
@@ -336,22 +321,22 @@ const CampusMap = () => {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3 shrink-0">
-          <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-eqc-green mb-2 flex items-center gap-1.5">
-              <Coffee size={12} /> Cafes & Shopping
+        <div className="flex-[2] grid grid-cols-2 gap-3">
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <h3 className="text-xs font-black uppercase tracking-widest text-eqc-green mb-3 flex items-center gap-1.5">
+              <Coffee size={14} /> Cafes & Shopping
             </h3>
-            <ul className="text-xs space-y-1 font-medium">
+            <ul className="text-sm space-y-2 font-medium">
               <li className="flex justify-between"><span>Gordon St Garage</span> <span className="text-eqc-muted">1m</span></li>
               <li className="flex justify-between"><span>Pony Express</span> <span className="text-eqc-muted">3m</span></li>
               <li className="flex justify-between"><span>Watertown Outlets</span> <span className="text-eqc-muted">5m</span></li>
             </ul>
           </div>
-          <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2 flex items-center gap-1.5">
-              <Train size={12} /> Public Transport
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+            <h3 className="text-xs font-black uppercase tracking-widest text-blue-600 mb-3 flex items-center gap-1.5">
+              <Train size={14} /> Public Transport
             </h3>
-            <ul className="text-xs space-y-1 font-medium">
+            <ul className="text-sm space-y-2 font-medium">
               <li className="flex justify-between"><span>City West Station</span> <span className="text-eqc-muted">4m</span></li>
               <li className="flex justify-between"><span>Bus 81, 82, 83, 84</span> <span className="text-eqc-muted">2m</span></li>
               <li className="flex justify-between"><span>Yellow CAT Bus</span> <span className="text-eqc-muted">3m</span></li>
@@ -513,9 +498,13 @@ const FloorPlan = () => {
 // --- Footer ---
 
 const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
+  const mobileUrl = typeof window !== 'undefined' ? `${window.location.origin}/mobile` : '';
   return (
     <footer className="bg-white border-t border-gray-100 px-6 py-3 flex justify-between items-center text-xs text-eqc-muted shrink-0">
       <div className="flex items-center gap-8">
+        <div className="bg-white border border-gray-200 rounded-lg p-1.5 shrink-0">
+          <QRCodeSVG value={mobileUrl} size={64} />
+        </div>
         <div className="flex items-center gap-2">
           <MapPin size={14} className="text-red-500" />
           <span className="font-medium">2 Gordon St, West Perth WA 6005</span>
@@ -529,15 +518,15 @@ const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
           <span className="font-medium">team@equinimcollege.com</span>
         </div>
         <div className="flex items-center gap-2">
+          <BriefcaseMedical size={14} className="text-red-500" />
+          <span className="font-medium">First Aid: Kitchen</span>
+        </div>
+        <div className="flex items-center gap-2">
           <Flame size={14} className="text-orange-500" />
           <span className="font-medium">Fire Assembly: Coolgardie St</span>
         </div>
-        <div className="flex items-center gap-2">
-          <BriefcaseMedical size={14} className="text-red-500" />
-          <span className="font-medium">First Aid: Reception</span>
-        </div>
       </div>
-      <div className="flex items-center gap-8">
+      <div className="flex items-center gap-6">
         <div className="font-bold tracking-wide">RTO 45758 · CRICOS 03952E</div>
         <button
           onClick={onAdmin}
@@ -646,38 +635,26 @@ export default function Lobby() {
               <h2 className="text-2xl font-bold serif text-white">Today's Room Allocations</h2>
             </div>
 
-            <div className="grid grid-cols-[140px_1fr_120px] gap-6 px-6 mb-2 shrink-0">
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Room</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Trainer · Intake · Course / Topic</span>
-              <span className="text-[10px] font-black uppercase tracking-widest text-white/50 text-right">Status</span>
-            </div>
 
-            <div className="flex-1 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 pb-2">
+            <div className="flex-1 flex flex-col gap-6 overflow-y-auto custom-scrollbar pr-2 pb-2">
               {rooms.map((room) => <RoomItem key={room.id} room={room} />)}
             </div>
           </div>
 
-          {/* Right area: 3-row CSS grid.
-              Row 1: FloorPlan spans both columns.
-              Row 2: CampusLifeCarousel | CampusMap (Google).
-              Row 3: EventList | MobileView. */}
           <div className="flex-[2] shrink-0 flex flex-col min-h-0 min-w-0">
             <div className="h-8 mb-4 shrink-0" />
-            <div className="flex-1 min-h-0 grid grid-cols-2 grid-rows-[2fr_2fr_1.5fr] gap-6">
+            <div className="flex-1 min-h-0 grid grid-cols-2 grid-rows-[2fr_1fr_1fr] gap-6">
               <div className="col-span-2 min-h-0">
                 <FloorPlan />
               </div>
               <div className="min-h-0">
                 <CampusLifeCarousel />
               </div>
-              <div className="min-h-0">
+              <div className="row-span-2 min-h-0">
                 <CampusMap />
               </div>
               <div className="min-h-0">
                 <EventList events={events} />
-              </div>
-              <div className="min-h-0">
-                <MobileViewTile />
               </div>
             </div>
           </div>

@@ -285,7 +285,7 @@ export default function Mobile() {
             </div>
             <div className="flex items-center gap-2">
               <BriefcaseMedical size={14} className="text-red-500 shrink-0" />
-              <span>First Aid: Reception</span>
+              <span>First Aid: Kitchen</span>
             </div>
           </div>
         </section>
