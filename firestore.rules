@@ -1,6 +1,8 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Original collections (rooms reset daily; events/staff/announcements
+    // are short-lived; config is misc).
     match /rooms/{doc} {
       allow read, write: if true;
     }
@@ -14,6 +16,23 @@ service cloud.firestore {
       allow read, write: if true;
     }
     match /config/{doc} {
+      allow read, write: if true;
+    }
+
+    // Persistent collections added in Phase 4.
+    match /trainers/{doc} {
+      allow read, write: if true;
+    }
+    match /carousel/{doc} {
+      allow read, write: if true;
+    }
+    match /signOnLog/{doc} {
+      allow read, write: if true;
+    }
+    match /rssFeeds/{doc} {
+      allow read, write: if true;
+    }
+    match /settings/{doc} {
       allow read, write: if true;
     }
   }
