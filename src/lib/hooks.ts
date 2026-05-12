@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, onSnapshot, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, getDoc, setDoc, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import type {
   RoomAllocation,
@@ -188,4 +188,38 @@ export function useResetCountdown(resetHour: number = 22) {
   const seconds = totalSeconds % 60;
   const pad = (n: number) => n.toString().padStart(2, '0');
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+/**
+ * Automatically resets all rooms to "available" once the daily reset hour is reached.
+ * Checks every 30 seconds; uses localStorage to prevent duplicate resets on the same day.
+ */
+export function useAutoReset(resetHour: number) {
+  useEffect(() => {
+    if (IS_DEMO_MODE) return;
+
+    const check = async () => {
+      const now = new Date();
+      if (now.getHours() < resetHour) return;
+
+      const today = now.toDateString();
+      const lastReset = localStorage.getItem('eqc-last-reset-date');
+      if (lastReset === today) return;
+
+      const snapshot = await getDocs(collection(db, 'rooms'));
+      for (const d of snapshot.docs) {
+        const room = d.data() as RoomAllocation;
+        await setDoc(doc(db, 'rooms', d.id), {
+          id: room.id,
+          roomName: room.roomName,
+          status: 'available',
+        });
+      }
+      localStorage.setItem('eqc-last-reset-date', today);
+    };
+
+    check();
+    const id = setInterval(check, 30_000);
+    return () => clearInterval(id);
+  }, [resetHour]);
 }
