@@ -107,10 +107,31 @@ const Header = () => {
 
 // --- Room Item ---
 
+function formatBreakRemaining(breakUntil?: string): string | null {
+  if (!breakUntil) return null;
+  const target = new Date(breakUntil).getTime();
+  const ms = target - Date.now();
+  if (ms <= 0) return null;
+  const minutes = Math.ceil(ms / 60000);
+  return minutes === 1 ? '1 min' : `${minutes} min`;
+}
+
 const RoomItem = ({ room }: { room: RoomAllocation }) => {
   const isLive = room.status === 'live';
   const isBreak = room.status === 'break';
+  const isInactive = room.status === 'inactive';
+  const hasContent = isLive || isBreak || isInactive;
   const trainerImg = getTrainerImagePath(room.trainer);
+  const [, forceTick] = useState(0);
+
+  // Re-render every 30s so break countdowns stay accurate.
+  useEffect(() => {
+    if (!isBreak) return;
+    const id = setInterval(() => forceTick(n => n + 1), 30_000);
+    return () => clearInterval(id);
+  }, [isBreak]);
+
+  const breakRemaining = isBreak ? formatBreakRemaining(room.breakUntil) : null;
 
   return (
     <motion.div
@@ -118,7 +139,7 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       animate={{ opacity: 1, y: 0 }}
       className={`
         grid grid-cols-[110px_80px_1fr_1.5fr_1fr_70px] items-center gap-5 px-6 rounded-2xl transition-all cursor-default flex-1
-        ${isLive ? 'bg-eqc-green text-white shadow-xl' : isBreak ? 'bg-orange-500 text-white shadow-lg' : 'bg-white border border-gray-100 shadow-sm'}
+        ${isLive ? 'bg-eqc-green text-white shadow-xl' : isBreak ? 'bg-orange-500 text-white shadow-lg' : isInactive ? 'bg-gray-300 text-gray-500 shadow-sm' : 'bg-white border border-gray-100 shadow-sm'}
       `}
     >
       <div>
@@ -126,7 +147,7 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       </div>
 
       <div>
-        {isLive && room.intake ? (
+        {hasContent && room.intake ? (
           <span className="text-xl font-bold">{room.intake}</span>
         ) : (
           <span className={`text-base italic ${isBreak ? 'text-white/50' : 'text-eqc-muted'}`}>&mdash;</span>
@@ -134,9 +155,9 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       </div>
 
       <div className="flex items-center gap-3 min-w-0">
-        {isLive ? (
+        {hasContent && room.trainer ? (
           <>
-            <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/40 shrink-0 bg-white">
+            <div className={`w-14 h-14 rounded-full overflow-hidden border-2 shrink-0 bg-white ${isInactive ? 'border-gray-200' : 'border-white/40'}`}>
               <img src={trainerImg} alt={room.trainer || 'Unknown'} className="w-full h-full object-cover object-top" />
             </div>
             <span className="font-bold text-xl truncate">{room.trainer}</span>
@@ -152,7 +173,7 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       </div>
 
       <div className="min-w-0">
-        {isLive && room.course ? (
+        {hasContent && room.course ? (
           <span className="font-bold text-base leading-tight truncate block">{room.course}</span>
         ) : (
           <span className={`text-base italic ${isBreak ? 'text-white/50' : 'text-eqc-muted'}`}>&mdash;</span>
@@ -160,7 +181,7 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
       </div>
 
       <div className="min-w-0">
-        {isLive && room.topic ? (
+        {hasContent && room.topic ? (
           <div className="flex items-center gap-2 min-w-0">
             <BookOpen size={18} className="shrink-0 opacity-70" />
             <span className="text-base font-medium italic truncate">{room.topic}</span>
@@ -176,6 +197,15 @@ const RoomItem = ({ room }: { room: RoomAllocation }) => {
             <div className="w-2.5 h-2.5 bg-white rounded-full animate-ping"></div>
             <span className="text-[10px] font-black tracking-widest uppercase">LIVE</span>
           </div>
+        )}
+        {isBreak && breakRemaining && (
+          <div className="flex items-center gap-2 bg-white/20 px-3 py-2 rounded-full border border-white/30">
+            <Coffee size={12} />
+            <span className="text-[10px] font-black tracking-widest uppercase">{breakRemaining}</span>
+          </div>
+        )}
+        {isInactive && (
+          <span className="text-[10px] font-black tracking-widest uppercase opacity-70">Signed off</span>
         )}
       </div>
     </motion.div>
