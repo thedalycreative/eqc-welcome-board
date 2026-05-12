@@ -21,7 +21,7 @@ import { QRCodeSVG } from 'qrcode.react';
 
 import type { RoomAllocation, Event, Announcement } from '../lib/types';
 import { getTrainerImagePath } from '../lib/trainers';
-import { useRooms, useEvents, useAnnouncements } from '../lib/hooks';
+import { useRooms, useEvents, useAnnouncements, useCarousel, useGlobalSettings } from '../lib/hooks';
 
 const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 const TRAINER_SIGN_ON_URL = `${import.meta.env.BASE_URL}trainer-sign-on.html`;
@@ -334,6 +334,58 @@ const CampusMap = () => {
   );
 };
 
+// --- Campus Life Carousel ---
+
+const CampusLifeCarousel = () => {
+  const items = useCarousel();
+  const [settings] = useGlobalSettings();
+  const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    if (items.length <= 1) return;
+    setIdx(i => (i >= items.length ? 0 : i));
+    const id = setInterval(() => {
+      setIdx(i => (i + 1) % items.length);
+    }, settings.carouselSlideDurationMs);
+    return () => clearInterval(id);
+  }, [items.length, settings.carouselSlideDurationMs]);
+
+  if (items.length === 0) return null;
+
+  const current = items[idx];
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden h-full flex flex-col">
+      <div className="flex-1 relative bg-gray-50 min-h-0">
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={current.id}
+            src={current.imageUrl}
+            alt={current.caption || 'Campus life'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6 }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        </AnimatePresence>
+        {current.caption && (
+          <div className="absolute bottom-3 left-3 right-3 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-medium">
+            {current.caption}
+          </div>
+        )}
+      </div>
+      {items.length > 1 && (
+        <div className="flex items-center justify-center gap-1.5 py-2 bg-white">
+          {items.map((_, i) => (
+            <div key={i} className={`h-1 rounded-full transition-all ${i === idx ? 'bg-eqc-green w-4' : 'bg-gray-200 w-1'}`} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- Floor Plan ---
 
 const FloorPlan = () => {
@@ -439,7 +491,9 @@ export default function Lobby() {
   const [rooms] = useRooms(INITIAL_ROOMS);
   const [events] = useEvents(IS_DEMO_MODE ? DEMO_EVENTS : []);
   const announcements = useAnnouncements();
+  const carouselItems = useCarousel();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const hasCarousel = carouselItems.length > 0;
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -497,6 +551,9 @@ export default function Lobby() {
             <div className="h-8 mb-4 shrink-0" />
             <div className="flex-1 flex flex-col gap-6 min-h-0">
               <div className="flex-[3] min-h-0"><FloorPlan /></div>
+              {hasCarousel && (
+                <div className="flex-[2] min-h-0"><CampusLifeCarousel /></div>
+              )}
               <div className="flex-[2] min-h-0"><EventList events={events} /></div>
             </div>
           </div>
