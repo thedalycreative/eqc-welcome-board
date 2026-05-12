@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Open read/write for the dashboard's image collections.
+    // In a production scenario these should be tightened to authenticated
+    // admins only, but the current model uses a single-password admin gate
+    // and the lobby itself needs public read access to display images.
+    match /trainers/{file=**} {
+      allow read, write: if true;
+    }
+    match /carousel/{file=**} {
+      allow read, write: if true;
+    }
+  }
+}

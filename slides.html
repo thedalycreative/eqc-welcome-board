@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intake 26B — Lesson Plan</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --green-dark: #1a4a3a;
+            --green-mid: #2a6b52;
+            --green-light: #3d8c6a;
+            --cream: #f5f0e8;
+            --red: #e63946;
+            --slate: #2d3748;
+            --muted: #718096;
+            --purple: #6b46c1;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .slideshow {
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 16/9;
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* SLIDE 1: QR */
+        .slide-1 {
+            background: linear-gradient(135deg, #1a4a3a 0%, #0f2d22 50%, #1a4a3a 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-1::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(45deg, transparent, transparent 40px,
+                    rgba(255, 255, 255, 0.02) 40px, rgba(255, 255, 255, 0.02) 41px);
+        }
+
+        .corner {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .corner.tl {
+            top: 20px;
+            left: 20px;
+            border-right: none;
+            border-bottom: none;
+        }
+
+        .corner.br {
+            bottom: 20px;
+            right: 20px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .slide-1 h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(28px, 5vw, 52px);
+            color: white;
+            letter-spacing: 6px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .qr-box {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            z-index: 1;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .qr-box img {
+            width: clamp(120px, 18vw, 200px);
+            height: clamp(120px, 18vw, 200px);
+            display: block;
+        }
+
+        .slide-1 .sub {
+            font-size: clamp(10px, 1.6vw, 16px);
+            color: rgba(255, 255, 255, 0.7);
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .slide-1 .sub::before,
+        .slide-1 .sub::after {
+            content: '';
+            display: block;
+            width: 40px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .slide-1 .badge {
+            position: absolute;
+            bottom: 24px;
+            right: 28px;
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+            z-index: 1;
+        }
+
+        /* SLIDE 2: SCHEDULE */
+        .slide-2 {
+            background: var(--cream);
+            display: grid;
+            grid-template-columns: 190px 1fr;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            background: var(--green-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 28px 22px;
+            gap: 8px;
+        }
+
+        .sidebar .label {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .sidebar h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(22px, 3.5vw, 38px);
+            color: white;
+            line-height: 1;
+            letter-spacing: 2px;
+        }
+
+        .intake-tag {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 6px 10px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 2px;
+            width: fit-content;
+        }
+
+        .s-main {
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            overflow-y: auto;
+        }
+
+        .wb {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        .wh {
+            padding: 7px 14px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wh.w1 {
+            background: var(--green-dark);
+        }
+
+        .wh.w2 {
+            background: var(--green-mid);
+        }
+
+        .wh.w3 {
+            background: var(--slate);
+        }
+
+        .wh .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .wh .dot.live {
+            background: #7fffb4;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.4
+            }
+        }
+
+        .dr {
+            display: grid;
+            grid-template-columns: 80px 1fr;
+        }
+
+        .dl {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            font-weight: 500;
+            color: var(--green-dark);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            padding: 9px 14px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            background: rgba(26, 74, 58, 0.04);
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .dc {
+            font-size: 11px;
+            color: var(--slate);
+            line-height: 1.5;
+            padding: 8px 14px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .chip {
+            display: inline-block;
+            border-radius: 4px;
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            padding: 2px 7px;
+            margin-right: 5px;
+            letter-spacing: 1px;
+            vertical-align: middle;
+            position: relative;
+            top: -1px;
+        }
+
+        .c-assess {
+            background: rgba(107, 70, 193, 0.12);
+            color: var(--purple);
+            border: 1px solid rgba(107, 70, 193, 0.3);
+        }
+
+        .c-plan {
+            background: rgba(26, 74, 58, 0.1);
+            color: var(--green-dark);
+            border: 1px solid rgba(26, 74, 58, 0.25);
+        }
+
+        .c-code {
+            background: rgba(244, 162, 97, 0.12);
+            color: #b45a1f;
+            border: 1px solid rgba(244, 162, 97, 0.4);
+        }
+
+        .c-client {
+            background: rgba(49, 130, 206, 0.1);
+            color: #2b6cb0;
+            border: 1px solid rgba(49, 130, 206, 0.3);
+        }
+
+        /* SLIDE 3: TODAY */
+        .slide-3 {
+            background: #0f1220;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-3::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            right: -80px;
+            width: 360px;
+            height: 360px;
+            background: radial-gradient(circle, rgba(107, 70, 193, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .topbar {
+            background: #1e1040;
+            padding: 14px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(107, 70, 193, 0.3);
+        }
+
+        .topbar h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: clamp(16px, 2.8vw, 26px);
+            color: white;
+            letter-spacing: 3px;
+        }
+
+        .daychip {
+            background: #7c3aed;
+            color: white;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            padding: 5px 14px;
+            border-radius: 20px;
+        }
+
+        .tcontent {
+            flex: 1;
+            padding: 20px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .drow {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .drow .ico {
+            font-size: 20px;
+            min-width: 28px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .drow .inf h3 {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: #a78bfa;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .drow .inf p {
+            font-size: 11.5px;
+            color: rgba(255, 255, 255, 0.5);
+            line-height: 1.6;
+        }
+
+        .drow .inf p strong {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .bnote {
+            padding: 0 32px 16px;
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.2);
+            letter-spacing: 2px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            padding: 10px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .sdots {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .dotb {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .dotb.on {
+            background: white;
+            width: 22px;
+            border-radius: 4px;
+        }
+
+        .sctr {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="slideshow" id="deck">
+
+        <!-- SLIDE 1: QR -->
+        <div class="slide slide-1 active">
+            <div class="corner tl"></div>
+            <div class="corner br"></div>
+            <h1>Scan the QR Code</h1>
+            <div class="qr-box">
+                <!-- Replace src with your actual QR image path -->
+                <img src="26b.png" alt="Attendance QR Code"
+                    onerror="this.style.display='none';this.parentNode.innerHTML='<div style=\'width:160px;height:160px;background:#eee;display:grid;place-items:center;font-family:monospace;font-size:11px;color:#999;text-align:center;border-radius:8px;\'>QR CODE<br>HERE</div>'" />
+            </div>
+            <div class="sub">To submit your attendance</div>
+            <div class="badge">26.B</div>
+        </div>
+
+        <!-- SLIDE 2: 3-WEEK SCHEDULE -->
+        <div class="slide slide-2">
+            <div class="sidebar">
+                <div class="label">Upcoming</div>
+                <h2>3-Week Schedule</h2>
+                <div class="intake-tag">INTAKE 26B</div>
+            </div>
+            <div class="s-main">
+
+                <div class="wb">
+                    <div class="wh w1">
+                        <div class="dot live"></div>WEEK 1 — THIS WEEK
+                    </div>
+                    <div class="dr">
+                        <div class="dl">MON</div>
+                        <div class="dc"><span class="chip c-assess">ASSESSMENT</span>Peer review — Lobby Dashboard
+                            (another class's project)</div>
+                        <div class="dl">WED</div>
+                        <div class="dc"><span class="chip c-plan">PLANNING</span>Original website — prompt engineering
+                            &amp; Assignment 2.1 Steps 1–2</div>
+                        <div class="dl">THU</div>
+                        <div class="dc"><span class="chip c-code">CODING</span>Finish Bootstrap clone + coursework
+                            catchup</div>
+                    </div>
+                </div>
+
+                <div class="wb">
+                    <div class="wh w2">
+                        <div class="dot"></div>WEEK 2 — NEXT WEEK
+                    </div>
+                    <div class="dr">
+                        <div class="dl">MON</div>
+                        <div class="dc"><span class="chip c-code">CODING</span>Continue original Bootstrap website</div>
+                        <div class="dl">WED</div>
+                        <div class="dc"><span class="chip c-code">CODING</span>Continue original Bootstrap website</div>
+                        <div class="dl">THU</div>
+                        <div class="dc"><span class="chip c-client">CLIENTS</span>Lead &amp; Facilitate a Team — Working
+                            with Clients exercise</div>
+                    </div>
+                </div>
+
+                <div class="wb">
+                    <div class="wh w3">
+                        <div class="dot"></div>WEEK 3
+                    </div>
+                    <div class="dr">
+                        <div class="dl">MON</div>
+                        <div class="dc"><span class="chip c-code">CODING</span>Continue Bootstrap website</div>
+                        <div class="dl">WED</div>
+                        <div class="dc"><span class="chip c-code">CODING</span>Bootstrap website — if complete, intro to
+                            Tailwind CSS</div>
+                        <div class="dl">THU</div>
+                        <div class="dc" style="color:var(--muted);font-style:italic;">TBA</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- SLIDE 3: TODAY DETAIL -->
+        <div class="slide slide-3">
+            <div class="topbar">
+                <h2>Today — Peer Review Assessment</h2>
+                <div class="daychip">MONDAY</div>
+            </div>
+            <div class="tcontent">
+                <div class="drow">
+                    <div class="ico">🔍</div>
+                    <div class="inf">
+                        <h3>What you're reviewing</h3>
+                        <p>The <strong>Lobby Dashboard</strong> — a project built by another class. Your job is to
+                            evaluate it critically and constructively, the way a real client or dev team would.</p>
+                    </div>
+                </div>
+                <div class="drow">
+                    <div class="ico">📋</div>
+                    <div class="inf">
+                        <h3>What to look for</h3>
+                        <p>
+                            <strong>Design &amp; layout</strong> — Is it clear? Responsive? Does it look
+                            intentional?<br>
+                            <strong>Code quality</strong> — Is it readable? Is the structure logical?<br>
+                            <strong>Functionality</strong> — Does it work? Any bugs or broken elements?
+                        </p>
+                    </div>
+                </div>
+                <div class="drow">
+                    <div class="ico">✍️</div>
+                    <div class="inf">
+                        <h3>Your output</h3>
+                        <p>Written feedback — what works, what doesn't, and <strong>one specific suggestion</strong> for
+                            improvement. Keep it professional. This is how real teams do code review.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bnote">INTAKE 26B · WEB DEVELOPMENT · PEER REVIEW ASSESSMENT</div>
+        </div>
+
+    </div>
+
+    <div class="controls">
+        <button class="btn" id="prev" onclick="goTo(current-1)" disabled>← Prev</button>
+        <div class="sdots" id="dots"></div>
+        <div class="sctr" id="counter">1 / 3</div>
+        <button class="btn" id="next" onclick="goTo(current+1)">Next →</button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        let current = 0;
+        const dotsEl = document.getElementById('dots');
+        slides.forEach((_, i) => {
+            const d = document.createElement('button');
+            d.className = 'dotb' + (i === 0 ? ' on' : '');
+            d.onclick = () => goTo(i);
+            dotsEl.appendChild(d);
+        });
+        function goTo(n) {
+            if (n < 0 || n >= slides.length) return;
+            slides[current].classList.remove('active');
+            document.querySelectorAll('.dotb')[current].classList.remove('on');
+            current = n;
+            slides[current].classList.add('active');
+            document.querySelectorAll('.dotb')[current].classList.add('on');
+            document.getElementById('counter').textContent = `${current + 1} / ${slides.length}`;
+            document.getElementById('prev').disabled = current === 0;
+            document.getElementById('next').disabled = current === slides.length - 1;
+        }
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowRight') goTo(current + 1);
+            if (e.key === 'ArrowLeft') goTo(current - 1);
+        });
+    </script>
+</body>
+
+</html>

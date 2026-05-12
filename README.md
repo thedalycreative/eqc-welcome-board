@@ -1,109 +1,134 @@
 # EQC Perth Campus Dashboard
 
-> A live lobby dashboard for the **Equinim College — Perth Campus**. Shows current room allocations, weather, announcements, the campus floorplan, and trainer sign-on — all updating in real time across every screen on campus.
+> A live lobby dashboard for the **Equinim College — Perth Campus**. Shows current room allocations, weather, alerts, the campus floorplan, and trainer sign-on — all updating in real time across every screen on campus.
 
-[![Live Site](https://img.shields.io/badge/Live_Site-Visit-1a7a54?style=for-the-badge)](https://eqc-dashboard-v2.onrender.com)
-[![Hosted on Render](https://img.shields.io/badge/Hosted_on-Render-46E3B7?style=for-the-badge&logo=render&logoColor=white)](https://render.com)
-[![Stack](https://img.shields.io/badge/Stack-React_19_·_Vite_·_Express_·_Socket.io-1A1A1A?style=for-the-badge)](#)
+[![Live Site](https://img.shields.io/badge/Live-Vercel-1a7a54?style=for-the-badge)](https://eqc-dashboard-by-25g.vercel.app)
+[![Stack](https://img.shields.io/badge/Stack-React_19_·_Vite_·_Firebase-1A1A1A?style=for-the-badge)](#)
 
 ---
 
-## Architecture & Naming
+## What this is
 
-| Layer | Name / Reference |
+A single-page React app deployed on Vercel that drives the lobby screen at EQC Perth. Real-time room status, trainer photos, scrolling alerts, upcoming events, weather, and a campus map. Trainers update their own status via a QR-coded sign-on form. Staff manage everything else from the `/admin` panel.
+
+| Where | URL |
 |---|---|
-| Local folder | `eqc-perth-campus-dashboard` |
-| GitHub repo | `thetimdaly/eqc-perth-campus-dashboard` |
-| Cloud Run service | `eqc-perth-campus-dashboard` |
-| Region | `australia-southeast1` (Sydney) |
-| Frontend framework | React 19 + TypeScript + Vite 6 + Tailwind CSS 4 |
-| Backend | Express 4 + Socket.io 4 (single Node process) |
-| Real-time channel | WebSockets via Socket.io |
-| Trainer sign-on | Static HTML at `/trainer-sign-on.html` (Google Form embed) |
+| **Lobby (production)** | [eqc-dashboard-by-25g.vercel.app](https://eqc-dashboard-by-25g.vercel.app) |
+| **Trainer sign-on** | [eqc-dashboard-by-25g.vercel.app/trainer-sign-on.html](https://eqc-dashboard-by-25g.vercel.app/trainer-sign-on.html) |
+| **Admin panel** | [eqc-dashboard-by-25g.vercel.app/admin](https://eqc-dashboard-by-25g.vercel.app/admin) (password gated) |
+| **Repo** | [github.com/thedalycreative/eqc-dashboard-by-25g](https://github.com/thedalycreative/eqc-dashboard-by-25g) |
+| **Firebase** | [console.firebase.google.com/project/eqc-dashboard-by-25g](https://console.firebase.google.com/project/eqc-dashboard-by-25g) |
 
 ---
 
-## How it Works
+## Architecture
 
-The dashboard runs as a single Node process. Express serves the built React SPA from `dist/`, and Socket.io shares a live state map (rooms, events, staff sign-ons, announcements) with every connected client. When a trainer signs on, an admin posts an announcement, or midnight rolls around (which auto-resets the room board), the server broadcasts the change and every screen on campus updates instantly without a refresh.
-
-There are three surfaces:
-
-- **The lobby screen** (`/`) — the main dashboard, designed to live on a Samsung Frame TV in reception.
-- **The trainer sign-on portal** (`/trainer-sign-on.html`) — a QR-code-friendly page that embeds a Google Form. Trainers fill in their name, room, course, and topics for the day; the admin dashboard reads from the same backend.
-- **The admin panel** — hidden behind a small cog icon in the footer, password-protected against `ADMIN_PASSWORD`. Lets staff override room status, post events, and create announcements with auto-expiry.
-
-State is kept in memory on the server, which is fine for a lobby kiosk that resets at midnight anyway. There's no database to manage.
-
----
-
-## Operating Guide
+| Layer | Detail |
+|---|---|
+| Frontend | React 19 + TypeScript + Vite 6 + Tailwind CSS 4 |
+| Routing | React Router v7 (BrowserRouter) — `/`, `/admin/*`, `/trainer-sign-on.html`, `/mobile` |
+| Real-time | Firebase Firestore `onSnapshot` listeners (no Socket.io in production) |
+| Persistence | Firebase Firestore (cloud — no in-memory state) |
+| File storage | Firebase Storage (trainer photos, carousel images) |
+| Production host | Vercel (static SPA + serverless rewrites) |
+| Trainer sign-on | Native React/HTML form at `/trainer-sign-on.html` posting directly to Firestore |
 
 > [!NOTE]
-> This guide is for **staff and trainers at EQC Perth**. No technical background needed.
+> An earlier version of this app ran on Render/Cloud Run as a single Node process with Socket.io for real-time sync. The current deployment is static on Vercel — Firestore handles the real-time channel directly from the browser. The `server.ts` Express server is kept for local development only (`npm run dev`).
 
-### As a trainer signing on for class
+---
 
-1. Walk past the lobby screen on the way in
-2. Scan the **Trainer Sign-On QR** (or open the cog icon in the footer and tap "Trainer Sign-On Portal")
-3. Fill in your name, intake, room, course, and what you're teaching today
-4. Hit **Sign On** — your room flips to "Live" on every screen on campus
+## Routes
 
-### As an admin
+| Route | Purpose |
+|---|---|
+| `/` | The lobby dashboard — what shows on the campus screen |
+| `/admin` | Redirects to `/admin/rooms` after password gate |
+| `/admin/rooms` | Manage room allocations |
+| `/admin/events` | Manage upcoming events |
+| `/admin/alerts` | Manage scrolling banner alerts |
+| `/admin/carousel` | (Coming Phase 4) Campus life photo carousel |
+| `/admin/trainers` | (Coming Phase 4) Trainer profile management |
+| `/admin/signon-log` | (Coming Phase 4) Historical sign-on log |
+| `/admin/rss` | (Coming Phase 6) RSS news ticker feeds |
+| `/admin/settings` | (Coming Phase 4) WiFi, contacts, brand, timing settings |
+| `/trainer-sign-on.html` | Trainer sign-on form (standalone HTML) |
+| `/mobile` | (Coming Phase 6) Mobile companion view |
 
-1. Tap the small cog icon in the footer (bottom-right)
-2. Enter the admin password
-3. Use the three tabs: **Rooms** (override status, edit details), **Events** (add/remove upcoming events), **Alerts** (post a scrolling announcement with an expiry)
+---
 
-### Verify everything is working
+## Firestore Collections
 
-- [ ] Lobby screen loads and the clock is ticking
-- [ ] All six rooms display as **Available** at the start of the day
-- [ ] WiFi QR (`EQC-network`) scans and connects
-- [ ] Floorplan image renders cleanly
-- [ ] Google Map of West Perth loads in the bottom-right tile
-- [ ] Trainer Sign-On portal opens via the QR
-- [ ] An announcement posted by an admin appears on the marquee within ~1 second
+| Collection | What it stores |
+|---|---|
+| `rooms` | Current room allocations (resets daily) |
+| `events` | Scheduled upcoming events |
+| `staff` | Sign-on records |
+| `announcements` | Active scrolling alerts |
+| `config` | Misc app config |
+| `trainers` | (Phase 4) Trainer profiles with photos |
+| `carousel` | (Phase 4) Campus life images |
+| `signOnLog` | (Phase 4) Historical sign-on / sign-off log |
+| `rssFeeds` | (Phase 6) RSS source library |
+| `settings/global` | (Phase 4) Global singleton: carousel timing, WiFi, contacts |
+
+Security rules live in [`firestore.rules`](./firestore.rules). Deploy them with:
+
+```bash
+firebase deploy --only firestore:rules
+```
 
 ---
 
 ## Local Development
 
-**Prerequisites:** Node.js 20+
+**Prerequisites:** Node.js 20+, Firebase CLI (`npm install -g firebase-tools`)
 
 ```bash
 npm install
-cp .env.example .env       # then edit ADMIN_PASSWORD
+cp .env.example .env       # then edit VITE_ADMIN_PASSWORD if needed
 npm run dev                # http://localhost:3000
 ```
 
-The `npm run dev` script starts Express + Socket.io with Vite middleware mode, so the React app hot-reloads while the backend stays alive.
+The `npm run dev` script runs Express with Vite middleware so the React app hot-reloads. The Firestore listeners connect live to the production Firebase project — be careful when testing destructive actions.
 
-### Other scripts
+### Scripts
 
 | Script | What it does |
 |---|---|
 | `npm run dev` | Run the dev server with hot reload |
-| `npm run build` | Build the frontend into `dist/` |
-| `npm run start` | Run the production server (serves from `dist/`) |
+| `npm run build` | Build the frontend into `dist/` for production |
+| `npm run build:pages` | Build for GitHub Pages preview (demo mode) |
+| `npm run start` | Run the production Express server (legacy) |
 | `npm run lint` | TypeScript check (`tsc --noEmit`) |
 | `npm run clean` | Delete `dist/` |
 
 ---
 
-## Deploying to Google Cloud Run
+## Deploying
 
-The dashboard needs a long-running Node process (because of WebSockets), so it runs as a Cloud Run container. A `Dockerfile` is included.
+### Vercel (current production)
 
-> [!TIP]
-> `--min-instances 1` keeps a warm container for the lobby screen so it never cold-starts. If you're trying to stay free-tier, set this to `0` and accept a ~2s cold start.
-
-### Updating the password later
+Pushes to `main` auto-deploy. Manual deploy:
 
 ```bash
-gcloud run services update eqc-perth-campus-dashboard \
-  --region australia-southeast1 \
-  --update-env-vars ADMIN_PASSWORD=NEW-STRONG-PASSWORD
+npx vercel --prod --yes
+```
+
+Set environment variables in Vercel project settings:
+
+| Variable | Value |
+|---|---|
+| `VITE_ADMIN_PASSWORD` | The admin panel password |
+
+The Firebase config has safe defaults baked in — only override `VITE_FIREBASE_*` if pointing at a different Firebase project.
+
+### Firebase rules
+
+Update [`firestore.rules`](./firestore.rules) then:
+
+```bash
+firebase deploy --only firestore:rules
 ```
 
 ---
@@ -112,21 +137,50 @@ gcloud run services update eqc-perth-campus-dashboard \
 
 | Variable | Where | Required | Notes |
 |---|---|---|---|
-| `ADMIN_PASSWORD` | server (Cloud Run secret) | **yes in production** | Falls back to `"asdf"` in local dev with a warning |
-| `PORT` | server | no | Cloud Run injects this; defaults to `3000` locally |
-| `NODE_ENV` | server | yes in prod | Set to `production` to serve `dist/` instead of running Vite |
+| `VITE_ADMIN_PASSWORD` | build-time | recommended | Password for `/admin`. Falls back to `"asdf"` |
+| `VITE_FIREBASE_*` | build-time | no | Override the baked-in Firebase config |
+| `VITE_DEMO_MODE` | build-time | no | `"true"` disables Firebase writes, seeds demo data |
+| `ADMIN_PASSWORD` | server | legacy | Only used by `server.ts` for Cloud Run/Render |
 
 > [!IMPORTANT]
-> Never commit a real `.env` file. The repo ships `.env.example` only — `.env*` is in `.gitignore`. Set production secrets via Cloud Run's environment-variables panel or Secret Manager.
+> Never commit a real `.env` file. The repo ships `.env.example` only — `.env*` is in `.gitignore`.
+
+---
+
+## Operating Guide
+
+> [!NOTE]
+> No technical background needed.
+
+### Trainer signing on for class
+
+1. Walk past the lobby screen on the way in
+2. Scan the QR code on the lobby (or open `/trainer-sign-on.html`)
+3. Fill in your name, intake, room, course, and what you're teaching today
+4. Hit **Sign On & Update Board** — your room flips to **Live** on every screen
+
+### Staff admin
+
+1. Open the lobby and tap the cog icon in the footer (or go to `/admin` directly)
+2. Enter the admin password
+3. Use the sidebar to switch between tabs: Rooms, Events, Alerts, etc.
+4. Changes save when you press **Save Changes** at the bottom of each tab
+
+### Daily checks
+
+- [ ] Lobby loads and the clock is ticking
+- [ ] All six rooms display as **Available** at the start of the day
+- [ ] WiFi QR scans and connects
+- [ ] Floorplan and Google Map both render
+- [ ] Trainer sign-on portal opens via the QR
+- [ ] An alert posted by an admin appears on the marquee within ~1 second
 
 ---
 
 ## Project Reference Files
 
 - [`PROJECT.md`](./PROJECT.md) — what this project is, who it's for, and the user journey
-- [`BRAND.md`](./BRAND.md) — the EQC visual and tonal reference (colours, type, voice)
-
-These live at the project root and are the source of truth for design and copy decisions. Update them as the project evolves.
+- [`BRAND.md`](./BRAND.md) — the EQC visual and tonal reference
 
 ---
 
