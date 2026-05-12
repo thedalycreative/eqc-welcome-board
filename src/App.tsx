@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Lobby from './pages/Lobby';
 import Admin from './pages/Admin';
 import TrainerSignOn from './pages/TrainerSignOn';
+import Mobile from './pages/Mobile';
 import AdminRooms from './pages/admin/Rooms';
 import AdminEvents from './pages/admin/Events';
 import AdminAlerts from './pages/admin/Alerts';
@@ -17,6 +18,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Lobby />} />
+        <Route path="/mobile" element={<Mobile />} />
 
         {/* Trainer sign-on. Both routes point to the same component so
             existing QR codes (which use .html) keep working. */}

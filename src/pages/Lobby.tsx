@@ -22,6 +22,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import type { RoomAllocation, Event, Announcement } from '../lib/types';
 import { getTrainerImagePath } from '../lib/trainers';
 import { useRooms, useEvents, useAnnouncements, useCarousel, useGlobalSettings } from '../lib/hooks';
+import { useRssTicker } from '../lib/rss';
+import { Rss } from 'lucide-react';
 
 const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 const TRAINER_SIGN_ON_URL = `${import.meta.env.BASE_URL}trainer-sign-on.html`;
@@ -416,6 +418,53 @@ const CampusLifeCarousel = () => {
   );
 };
 
+// --- RSS Ticker (bottom edge) ---
+
+const RSS_SCROLL_DURATIONS = {
+  slow: 90,
+  medium: 60,
+  fast: 35,
+} as const;
+
+const RssTicker = () => {
+  const items = useRssTicker(20);
+  const [settings] = useGlobalSettings();
+  if (!settings.rssEnabled || items.length === 0) return null;
+
+  const duration = RSS_SCROLL_DURATIONS[settings.rssScrollSpeed] || RSS_SCROLL_DURATIONS.medium;
+
+  return (
+    <div className="bg-eqc-bg/95 backdrop-blur-sm border-t border-white/10 text-white py-2 overflow-hidden shrink-0 group">
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2 shrink-0 px-4 border-r border-white/20">
+          <Rss size={14} className="text-eqc-green" />
+          <span className="text-[10px] font-black uppercase tracking-widest">News</span>
+        </div>
+        <div className="flex-1 overflow-hidden">
+          <div
+            className="flex whitespace-nowrap items-center gap-12 animate-rss-marquee group-hover:[animation-play-state:paused]"
+            style={{ animationDuration: `${duration}s` }}
+          >
+            {[...items, ...items].map((item, idx) => (
+              <span key={`${item.link}-${idx}`} className="text-sm flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-eqc-green">{item.source}</span>
+                <span className="opacity-90">{item.title}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes rss-marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-rss-marquee { animation: rss-marquee linear infinite; }
+      `}</style>
+    </div>
+  );
+};
+
 // --- Floor Plan ---
 
 const FloorPlan = () => {
@@ -605,6 +654,8 @@ export default function Lobby() {
           </div>
         </div>
       </main>
+
+      <RssTicker />
 
       <Footer onAdmin={() => navigate('/admin')} />
 
