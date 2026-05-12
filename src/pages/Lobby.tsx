@@ -531,33 +531,47 @@ const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
 
 // --- Announcement Banner ---
 
+const SIZE_CLASSES = { sm: 'text-sm', md: 'text-lg', lg: 'text-2xl' } as const;
+const SPEED_DURATIONS = { slow: 60, medium: 30, fast: 18 } as const;
+
 const AnnouncementBanner = ({ announcements }: { announcements: Announcement[] }) => {
   if (announcements.length === 0) return null;
 
+  // Each banner has its own style. Stack them rather than mix in one marquee.
   return (
-    <div className="bg-eqc-green text-white overflow-hidden py-2 shrink-0 relative z-[60] border-b border-white/10">
-      <div className="flex whitespace-nowrap animate-marquee items-center gap-20">
-        {announcements.map((ann, idx) => (
-          <div key={`${ann.id}-${idx}`} className="flex items-center gap-4">
-            <div className={`w-2 h-2 rounded-full ${ann.color} border border-white/20 shadow-sm`} />
-            <span className="text-lg font-black uppercase tracking-[0.2em] italic">{ann.text}</span>
-            <div className={`w-2 h-2 rounded-full ${ann.color} border border-white/20 shadow-sm`} />
+    <div className="shrink-0 relative z-[60] border-b border-white/10">
+      {announcements.map((ann) => {
+        const bg = ann.color || 'bg-eqc-green';
+        const txt = ann.textColor || 'text-white';
+        const sizeClass = SIZE_CLASSES[ann.textSize || 'md'];
+        const duration = SPEED_DURATIONS[ann.scrollSpeed || 'medium'];
+        return (
+          <div key={ann.id} className={`${bg} ${txt} overflow-hidden py-2`}>
+            <div
+              className="flex whitespace-nowrap items-center gap-16 animate-marquee"
+              style={{ animationDuration: `${duration}s` }}
+            >
+              {[0, 1].map(dupe => (
+                <div key={dupe} className="flex items-center gap-16">
+                  {[0, 1, 2].map(repeat => (
+                    <span key={repeat} className={`${sizeClass} font-black uppercase tracking-[0.2em] italic flex items-center gap-3`}>
+                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                      {ann.text}
+                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
           </div>
-        ))}
-        {announcements.map((ann, idx) => (
-          <div key={`${ann.id}-dup-${idx}`} className="flex items-center gap-4">
-            <div className={`w-2 h-2 rounded-full ${ann.color} border border-white/20 shadow-sm`} />
-            <span className="text-lg font-black uppercase tracking-[0.2em] italic">{ann.text}</span>
-            <div className={`w-2 h-2 rounded-full ${ann.color} border border-white/20 shadow-sm`} />
-          </div>
-        ))}
-      </div>
+        );
+      })}
       <style>{`
         @keyframes marquee {
           0% { transform: translateX(0); }
           100% { transform: translateX(-50%); }
         }
-        .animate-marquee { animation: marquee 30s linear infinite; }
+        .animate-marquee { animation-name: marquee; animation-timing-function: linear; animation-iteration-count: infinite; }
       `}</style>
     </div>
   );
