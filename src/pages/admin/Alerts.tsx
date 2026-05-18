@@ -213,7 +213,7 @@ export default function AdminAlerts() {
   };
 
   return (
-    <div className="space-y-8 max-w-5xl w-full">
+    <div className="space-y-8 max-w-6xl w-full">
       <Toaster position="bottom-right" />
 
       <div>

@@ -95,7 +95,7 @@ const Header = () => {
       </div>
       <div className="flex items-center gap-4 text-right">
         <Forecast7Widget />
-        <div className="flex items-center gap-4 bg-gray-50 px-5 h-14 rounded-xl border border-gray-100">
+        <div className="flex items-center gap-4 bg-gray-50 px-5 rounded-xl border border-gray-100" style={{ height: 80 }}>
           <span className="text-sm font-bold text-eqc-muted tracking-tight">{formattedDate}</span>
           <div className="w-px h-8 bg-gray-300" />
           <div className="flex items-baseline gap-1 w-[130px] justify-end tabular-nums">
@@ -216,38 +216,45 @@ const RoomItem = ({ room, trainers }: { room: RoomAllocation; trainers: Trainer[
 const EVENT_INTERVAL_MS = 30000;
 
 const EventList = ({ events }: { events: Event[] }) => {
+  const upcoming = useMemo(() => {
+    const now = new Date();
+    return events
+      .filter(e => new Date(e.date + 'T23:59:59') >= now)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [events]);
+
   const [currentIdx, setCurrentIdx] = useState(0);
 
   useEffect(() => {
-    if (events.length <= 1) return;
-    setCurrentIdx((idx) => (idx >= events.length ? 0 : idx));
+    if (upcoming.length <= 1) return;
+    setCurrentIdx((idx) => (idx >= upcoming.length ? 0 : idx));
     const timer = setInterval(() => {
-      setCurrentIdx((idx) => (idx + 1) % events.length);
+      setCurrentIdx((idx) => (idx + 1) % upcoming.length);
     }, EVENT_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [events.length]);
+  }, [upcoming.length]);
 
-  const currentEvent = events[currentIdx];
+  const currentEvent = upcoming[currentIdx];
 
   return (
-    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-lg h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-3 shrink-0">
-        <div className="flex items-center gap-2">
+    <div className="bg-white p-[clamp(8px,1.2vw,16px)] rounded-2xl border border-gray-100 shadow-lg h-full flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between mb-[clamp(4px,0.6vw,12px)] shrink-0">
+        <div className="flex items-center gap-[clamp(4px,0.4vw,8px)]">
           <CalendarDaysIcon size={18} className="text-eqc-green" />
-          <h2 className="text-lg font-display font-bold">Upcoming Events</h2>
+          <h2 className="text-[clamp(11px,1.1vw,18px)] font-display font-bold">Upcoming Events</h2>
         </div>
-        {events.length > 1 && (
-          <div className="flex items-center gap-1.5">
-            {events.map((_, idx) => (
-              <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentIdx ? 'bg-eqc-green w-5' : 'bg-gray-200 w-1.5'}`} />
+        {upcoming.length > 1 && (
+          <div className="flex items-center gap-1">
+            {upcoming.map((_, idx) => (
+              <div key={idx} className={`h-1 rounded-full transition-all ${idx === currentIdx ? 'bg-eqc-green w-4' : 'bg-gray-200 w-1'}`} />
             ))}
           </div>
         )}
       </div>
 
-      <div className="flex-1 flex flex-col justify-center min-h-0 relative">
-        {events.length === 0 ? (
-          <p className="text-eqc-muted italic text-sm">No events scheduled.</p>
+      <div className="flex-1 flex flex-col justify-center min-h-0 relative overflow-hidden">
+        {upcoming.length === 0 ? (
+          <p className="text-eqc-muted italic text-[clamp(10px,0.9vw,14px)]">No upcoming events.</p>
         ) : (
           <AnimatePresence mode="wait">
             <motion.div
@@ -256,22 +263,24 @@ const EventList = ({ events }: { events: Event[] }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.4 }}
-              className="border-l-4 border-eqc-green pl-5 py-1"
+              className="border-l-[3px] border-eqc-green pl-[clamp(8px,1vw,20px)] py-0.5"
             >
-              <p className="text-[10px] font-black text-eqc-green uppercase tracking-widest mb-2">
-                {new Date(currentEvent.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-              </p>
-              <h3 className="text-base font-display font-bold text-eqc-text leading-tight mb-1">{currentEvent.title}</h3>
-              <p className="text-xs text-eqc-muted leading-relaxed line-clamp-3">{currentEvent.description}</p>
+              <div className="flex items-center gap-[clamp(4px,0.5vw,8px)] mb-[clamp(2px,0.3vw,8px)]">
+                {currentEvent.icon && <span className="text-[clamp(12px,1.2vw,20px)]">{currentEvent.icon}</span>}
+                <p className="text-[clamp(8px,0.7vw,10px)] font-black text-eqc-green uppercase tracking-widest">
+                  {new Date(currentEvent.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+              <h3 className="text-[clamp(11px,1vw,16px)] font-display font-bold text-eqc-text leading-tight mb-0.5">{currentEvent.title}</h3>
+              <p className="text-[clamp(9px,0.8vw,12px)] text-eqc-muted leading-relaxed line-clamp-2">{currentEvent.description}</p>
             </motion.div>
           </AnimatePresence>
         )}
-
       </div>
 
-      <div className="mt-4 pt-3 border-t border-gray-100 text-[10px] text-eqc-muted shrink-0 flex justify-between items-center">
+      <div className="mt-auto pt-[clamp(4px,0.5vw,12px)] border-t border-gray-100 text-[clamp(8px,0.65vw,10px)] text-eqc-muted shrink-0 flex justify-between items-center">
         <span>Questions? <span className="text-eqc-green font-bold">trainer@equinimcollege.com</span></span>
-        {events.length > 1 && <span className="font-bold tracking-wider uppercase">{currentIdx + 1} / {events.length}</span>}
+        {upcoming.length > 1 && <span className="font-bold tracking-wider uppercase">{currentIdx + 1} / {upcoming.length}</span>}
       </div>
     </div>
   );
@@ -488,7 +497,12 @@ const FloorPlan = () => {
         <h2 className="text-lg font-display font-bold">Campus Map</h2>
       </div>
       <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative flex items-center justify-center">
-        <img src={`/images/eqc-perth-youarehere-v5.png?${FLOORPLAN_VERSION}`} alt="Campus Floor Plan" className="w-full h-full object-cover scale-110" referrerPolicy="no-referrer" />
+        <img
+          src="/images/EQC CAMPUS FLOORPLAN.png"
+          alt="Campus Floor Plan"
+          className="w-full h-full object-contain floorplan-float"
+          referrerPolicy="no-referrer"
+        />
         <div className="absolute inset-0 flex items-end justify-center pb-4 pointer-events-none">
           <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full border border-white shadow-sm">
             <span className="text-xs font-bold text-eqc-text uppercase tracking-widest">Level 1 - West Perth</span>
@@ -506,8 +520,11 @@ const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
   return (
     <footer className="bg-white border-t border-gray-100 px-6 py-1.5 flex justify-between items-center text-[11px] text-eqc-muted shrink-0">
       <div className="flex items-center gap-6">
-        <div className="bg-white border border-gray-200 rounded p-1 shrink-0">
-          <QRCodeSVG value={mobileUrl} size={36} />
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="bg-white border border-gray-200 rounded-lg p-1.5">
+            <QRCodeSVG value={mobileUrl} size={48} />
+          </div>
+          <span className="text-[10px] font-bold text-eqc-green leading-tight uppercase tracking-wide">Mobile<br/>Friendly<br/>Website</span>
         </div>
         <div className="flex items-center gap-1.5">
           <MapPin size={12} className="text-red-500" />
@@ -726,6 +743,12 @@ export default function Lobby() {
           75% { transform: translateX(5px); }
         }
         .animate-shake { animation: shake 0.2s ease-in-out 0s 2; }
+
+        @keyframes floorplanFloat {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .floorplan-float { animation: floorplanFloat 4s ease-in-out infinite; }
       `}</style>
     </div>
   );

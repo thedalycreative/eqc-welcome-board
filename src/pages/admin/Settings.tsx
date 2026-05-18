@@ -49,7 +49,7 @@ export default function AdminSettings() {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl pb-24">
+    <div className="space-y-6 max-w-6xl pb-24">
       <Toaster position="bottom-right" />
 
       <div>

@@ -153,21 +153,22 @@ export default function AdminRooms() {
                 className={`w-full px-2 py-1.5 border border-gray-200 rounded text-sm font-bold ${isCoreRoom ? 'bg-gray-50 border-transparent cursor-not-allowed' : 'bg-white'}`}
               />
               <select
-                value={room.status}
+                value={room.status === 'available' ? 'live' : room.status}
                 onChange={(e) => updateDraft(idx, 'status', e.target.value)}
+                disabled={room.status === 'available' && !room.course && !room.trainer}
                 className={`w-full px-2 py-1.5 border border-gray-200 rounded text-xs font-bold ${
-                  room.status === 'live' ? 'text-green-700' : room.status === 'break' ? 'text-orange-700' : 'text-gray-600'
+                  room.status === 'available' && !room.course && !room.trainer ? 'text-gray-400 bg-gray-50 cursor-not-allowed' :
+                  room.status === 'live' ? 'text-green-700' : room.status === 'break' ? 'text-orange-700' : room.status === 'inactive' ? 'text-gray-500' : 'text-gray-600'
                 }`}
               >
-                <option value="available">Available</option>
                 <option value="live">Live</option>
                 <option value="break">Break</option>
-                <option value="inactive">Inactive</option>
+                <option value="inactive">Signed Off</option>
               </select>
-              <input value={room.course || ''} onChange={(e) => updateDraft(idx, 'course', e.target.value)} placeholder="—" className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm bg-white" />
-              <input value={room.trainer || ''} onChange={(e) => updateDraft(idx, 'trainer', e.target.value)} placeholder="—" className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm bg-white" />
-              <input value={room.intake || ''} onChange={(e) => updateDraft(idx, 'intake', e.target.value)} placeholder="—" className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm bg-white" />
-              <input value={room.topic || ''} onChange={(e) => updateDraft(idx, 'topic', e.target.value)} placeholder="—" className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm bg-white" />
+              <input value={room.course || ''} onChange={(e) => updateDraft(idx, 'course', e.target.value)} placeholder="—" className={`w-full px-2 py-1.5 border border-gray-200 rounded text-sm ${room.status === 'available' ? 'bg-gray-50 text-gray-400' : 'bg-white'}`} />
+              <input value={room.trainer || ''} onChange={(e) => updateDraft(idx, 'trainer', e.target.value)} placeholder="—" className={`w-full px-2 py-1.5 border border-gray-200 rounded text-sm ${room.status === 'available' ? 'bg-gray-50 text-gray-400' : 'bg-white'}`} />
+              <input value={room.intake || ''} onChange={(e) => updateDraft(idx, 'intake', e.target.value)} placeholder="—" className={`w-full px-2 py-1.5 border border-gray-200 rounded text-sm ${room.status === 'available' ? 'bg-gray-50 text-gray-400' : 'bg-white'}`} />
+              <input value={room.topic || ''} onChange={(e) => updateDraft(idx, 'topic', e.target.value)} placeholder="—" className={`w-full px-2 py-1.5 border border-gray-200 rounded text-sm ${room.status === 'available' ? 'bg-gray-50 text-gray-400' : 'bg-white'}`} />
               <div className="flex justify-end gap-1">
                 {room.status !== 'available' && (
                   <button onClick={() => handleClearRoom(idx)} className="text-orange-500 p-1.5 hover:bg-orange-100 rounded" title="Clear Room">

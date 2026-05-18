@@ -16,6 +16,8 @@ import {
   X,
   Home,
   ExternalLink,
+  Smartphone,
+  ClipboardCheck,
 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -186,12 +188,30 @@ export default function Admin() {
             <span className="font-timer text-2xl font-bold tabular-nums text-eqc-green leading-none">{countdown}</span>
           </div>
 
-          <button
-            onClick={() => navigate('/')}
-            className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Home size={16} /> Lobby
-          </button>
+          <div className="hidden md:flex items-center gap-2">
+            <a
+              href={TRAINER_SIGN_ON_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Trainer Sign-On Portal"
+            >
+              <ClipboardCheck size={18} />
+            </a>
+            <button
+              onClick={() => navigate('/mobile')}
+              className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Mobile Site"
+            >
+              <Smartphone size={18} />
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Home size={16} /> Dashboard
+            </button>
+          </div>
 
           <button
             onClick={signOut}
@@ -262,7 +282,13 @@ export default function Admin() {
               onClick={() => navigate('/')}
               className="md:hidden flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors min-h-[44px]"
             >
-              <Home size={14} /> Back to Lobby
+              <Home size={14} /> Back to Dashboard
+            </button>
+            <button
+              onClick={() => navigate('/mobile')}
+              className="md:hidden flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors min-h-[44px]"
+            >
+              <Smartphone size={14} /> Mobile Site
             </button>
             <a
               href={TRAINER_SIGN_ON_URL}
