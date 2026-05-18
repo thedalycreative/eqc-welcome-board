@@ -125,16 +125,17 @@ export default function AdminRooms() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
-        <div className="grid grid-cols-[80px_110px_1fr_1fr_90px_1fr_70px] gap-2 px-3 py-2 bg-gray-100 border-b border-gray-200 text-[10px] font-black uppercase tracking-wider text-eqc-muted">
-          <span>Room</span>
-          <span>Status</span>
-          <span>Course</span>
-          <span>Trainer</span>
-          <span>Intake</span>
-          <span>Topic</span>
-          <span className="text-right">Actions</span>
-        </div>
+      <div className="rounded-xl border border-gray-200 overflow-x-auto bg-white">
+        <div className="min-w-[800px]">
+          <div className="grid grid-cols-[80px_110px_1fr_1fr_90px_1fr_70px] gap-2 px-3 py-2 bg-gray-100 border-b border-gray-200 text-[10px] font-black uppercase tracking-wider text-eqc-muted">
+            <span>Room</span>
+            <span>Status</span>
+            <span>Course</span>
+            <span>Trainer</span>
+            <span>Intake</span>
+            <span>Topic</span>
+            <span className="text-right">Actions</span>
+          </div>
         {draftRooms.map((room, idx) => {
           const num = parseInt(room.roomName.replace('Room ', ''));
           const isCoreRoom = !isNaN(num) && num >= 1 && num <= 6;
@@ -182,6 +183,7 @@ export default function AdminRooms() {
             </div>
           );
         })}
+        </div>
       </div>
 
       <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">

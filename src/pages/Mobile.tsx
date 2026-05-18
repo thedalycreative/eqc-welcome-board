@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   MapPin,
   Phone,
@@ -40,7 +41,7 @@ const MobileRoomCard = ({ room }: { room: RoomAllocation }) => {
       }`}
     >
       <div className="flex items-center gap-3 mb-2">
-        <h3 className="font-bold font-display text-lg">{room.roomName}</h3>
+        <h3 className="font-bold font-display text-lg truncate max-w-[180px]">{room.roomName}</h3>
         <div className="flex-1" />
         {isLive && <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2 py-0.5 rounded-full">Live</span>}
         {isBreak && <span className="text-[10px] font-black tracking-widest uppercase bg-white/20 px-2 py-0.5 rounded-full flex items-center gap-1"><Coffee size={10} /> Break</span>}
@@ -292,9 +293,9 @@ export default function Mobile() {
 
         <div className="text-center pt-2">
           <p className="text-[10px] text-gray-400">RTO 45758 · CRICOS 03952E</p>
-          <a href="/" className="text-xs text-gray-500 hover:text-eqc-green inline-flex items-center gap-1 mt-2">
+          <Link to="/" className="text-xs text-gray-500 hover:text-eqc-green inline-flex items-center gap-1 mt-2">
             <ExternalLink size={11} /> View lobby dashboard
-          </a>
+          </Link>
         </div>
       </main>
     </div>

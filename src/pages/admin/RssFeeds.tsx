@@ -98,8 +98,9 @@ export default function AdminRssFeeds() {
           </button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="grid grid-cols-[40px_1fr_120px_60px_80px] gap-3 px-4 py-2 bg-gray-100 border-b border-gray-200 text-[10px] font-black uppercase tracking-wider text-eqc-muted">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+          <div className="min-w-[600px]">
+            <div className="grid grid-cols-[40px_1fr_120px_60px_80px] gap-3 px-4 py-2 bg-gray-100 border-b border-gray-200 text-[10px] font-black uppercase tracking-wider text-eqc-muted">
             <span></span>
             <span>Label / URL</span>
             <span>Category</span>
@@ -134,6 +135,7 @@ export default function AdminRssFeeds() {
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
 

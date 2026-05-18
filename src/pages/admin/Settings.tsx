@@ -135,18 +135,20 @@ export default function AdminSettings() {
         {draft.contacts.length === 0 ? (
           <p className="text-sm text-eqc-muted italic">No contacts yet. Add one above.</p>
         ) : (
-          <div className="space-y-3">
-            {draft.contacts.map((c, idx) => (
-              <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_120px_40px] gap-2 items-center bg-gray-50 p-3 rounded-lg">
-                <input value={c.name} onChange={(e) => updateContact(idx, { name: e.target.value })} placeholder="Name" className="w-full px-2 py-1.5 border rounded text-sm bg-white" />
-                <input value={c.role} onChange={(e) => updateContact(idx, { role: e.target.value })} placeholder="Role" className="w-full px-2 py-1.5 border rounded text-sm bg-white" />
-                <input value={c.email} onChange={(e) => updateContact(idx, { email: e.target.value })} placeholder="email@example.com" className="w-full px-2 py-1.5 border rounded text-sm bg-white" />
-                <input value={c.phone || ''} onChange={(e) => updateContact(idx, { phone: e.target.value })} placeholder="Phone (optional)" className="w-full px-2 py-1.5 border rounded text-sm bg-white" />
-                <button onClick={() => removeContact(idx)} className="text-red-500 p-1.5 hover:bg-red-50 rounded justify-self-end">
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <div className="min-w-[600px] space-y-3">
+              {draft.contacts.map((c, idx) => (
+                <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_120px_40px] gap-2 items-center bg-gray-50 p-3 rounded-lg">
+                  <input value={c.name} onChange={(e) => updateContact(idx, { name: e.target.value })} placeholder="Name" className="w-full px-2 py-1.5 border rounded text-sm bg-white" />
+                  <input value={c.role} onChange={(e) => updateContact(idx, { role: e.target.value })} placeholder="Role" className="w-full px-2 py-1.5 border rounded text-sm bg-white" />
+                  <input value={c.email} onChange={(e) => updateContact(idx, { email: e.target.value })} placeholder="email@example.com" className="w-full px-2 py-1.5 border rounded text-sm bg-white" />
+                  <input value={c.phone || ''} onChange={(e) => updateContact(idx, { phone: e.target.value })} placeholder="Phone (optional)" className="w-full px-2 py-1.5 border rounded text-sm bg-white" />
+                  <button onClick={() => removeContact(idx)} className="text-red-500 p-1.5 hover:bg-red-50 rounded justify-self-end">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </section>

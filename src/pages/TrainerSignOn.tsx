@@ -1,4 +1,5 @@
 import { useState, useEffect, FormEvent, useMemo, useCallback, type ChangeEvent } from 'react';
+import { Link } from 'react-router-dom';
 import { Coffee, LogOut, Check, X, Clock, AlertTriangle, ExternalLink, Camera, Play, Edit3, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -877,9 +878,9 @@ export default function TrainerSignOn() {
         </section>
 
         <div className="text-center pt-2">
-          <a href="/" className="text-xs text-gray-500 hover:text-eqc-green inline-flex items-center gap-1">
+          <Link to="/" className="text-xs text-gray-500 hover:text-eqc-green inline-flex items-center gap-1">
             <ExternalLink size={12} /> Back to lobby dashboard
-          </a>
+          </Link>
         </div>
       </main>
 

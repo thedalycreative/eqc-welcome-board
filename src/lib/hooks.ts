@@ -200,11 +200,15 @@ export function useAutoReset(resetHour: number) {
 
     const check = async () => {
       const now = new Date();
-      if (now.getHours() < resetHour) return;
-
-      const today = now.toDateString();
-      const lastReset = localStorage.getItem('eqc-last-reset-date');
-      if (lastReset === today) return;
+      // Calculate the timestamp of the last reset deadline (e.g., today at 10 PM, or yesterday at 10 PM)
+      const lastResetDeadline = new Date(now);
+      lastResetDeadline.setHours(resetHour, 0, 0, 0);
+      if (now.getTime() < lastResetDeadline.getTime()) {
+        lastResetDeadline.setDate(lastResetDeadline.getDate() - 1);
+      }
+      
+      const lastResetStr = localStorage.getItem('eqc-last-reset-time');
+      if (lastResetStr && Number(lastResetStr) === lastResetDeadline.getTime()) return;
 
       const snapshot = await getDocs(collection(db, 'rooms'));
       for (const d of snapshot.docs) {
@@ -215,7 +219,7 @@ export function useAutoReset(resetHour: number) {
           status: 'available',
         });
       }
-      localStorage.setItem('eqc-last-reset-date', today);
+      localStorage.setItem('eqc-last-reset-time', lastResetDeadline.getTime().toString());
     };
 
     check();

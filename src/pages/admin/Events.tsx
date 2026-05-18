@@ -72,7 +72,7 @@ export default function AdminEvents() {
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Plus size={18} className="text-eqc-green" /> Add New Event
         </h3>
-        <form onSubmit={createEvent} className="grid grid-cols-2 gap-4">
+        <form onSubmit={createEvent} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className="block text-sm font-bold mb-1">Event Title</label>
             <input name="title" required className="w-full p-3 border rounded-lg" placeholder="e.g. Graduation Ceremony" />
@@ -109,7 +109,7 @@ export default function AdminEvents() {
             {events.map(event => (
               <div key={event.id} className="bg-white p-5 rounded-xl border shadow-sm">
                 {editingId === event.id ? (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="col-span-2">
                       <label className="block text-[10px] font-bold uppercase mb-1">Title</label>
                       <input value={editData.title ?? event.title} onChange={(e) => setEditData({ ...editData, title: e.target.value })} className="w-full p-2 border rounded text-sm" />
@@ -132,7 +132,7 @@ export default function AdminEvents() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex justify-between items-center">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
                         <Clock size={22} className="text-eqc-muted" />
@@ -143,7 +143,7 @@ export default function AdminEvents() {
                         <p className="text-xs text-eqc-muted mt-1">{event.description}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 self-end sm:self-auto">
                       <button onClick={() => { setEditingId(event.id); setEditData({}); }} className="text-blue-500 p-2 hover:bg-blue-50 rounded-lg"><Edit3 size={18} /></button>
                       <button onClick={() => deleteEvent(event)} className="text-red-500 p-2 hover:bg-red-50 rounded-lg"><Trash2 size={18} /></button>
                     </div>

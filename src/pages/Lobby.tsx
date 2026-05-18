@@ -25,7 +25,7 @@ import { useRooms, useEvents, useAnnouncements, useCarousel, useGlobalSettings, 
 import { useRssTicker } from '../lib/rss';
 import { Rss } from 'lucide-react';
 
-const MOBILE_REDIRECT_DISMISSED_KEY = 'eqc-mobile-redirect-dismissed';
+
 const FLOORPLAN_VERSION = 'v5';
 
 const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
@@ -149,10 +149,10 @@ const RoomItem = ({ room, trainers }: { room: RoomAllocation; trainers: Trainer[
       `}
     >
       <div className="flex flex-row items-center gap-4">
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+        <div className={`min-w-[48px] px-3 h-12 rounded-full flex items-center justify-center shrink-0 ${
           isLive ? 'bg-white/20' : isBreak ? 'bg-white/20' : isInactive ? 'bg-gray-200' : 'bg-gray-100'
         }`}>
-          <span className="font-sans font-bold text-xl leading-[0] translate-y-px">{room.roomName.replace('Room ', '')}</span>
+          <span className="font-sans font-bold text-xl leading-[0] translate-y-px truncate max-w-[150px]">{room.roomName.replace('Room ', '')}</span>
         </div>
         {hasContent && room.trainer ? (
           <>
@@ -592,51 +592,7 @@ const AnnouncementBanner = ({ announcements }: { announcements: Announcement[] }
   );
 };
 
-// --- Mobile Redirect Modal ---
 
-const MobileRedirectModal = ({ onDismiss }: { onDismiss: () => void }) => {
-  return (
-    <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-5">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden">
-        <a
-          href="/admin"
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-eqc-muted transition-colors"
-          aria-label="Open admin panel"
-        >
-          {/* Hand-coded cog SVG */}
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-          </svg>
-        </a>
-        <div className="p-7 text-center">
-          <div className="mx-auto w-14 h-14 rounded-full bg-eqc-green/10 flex items-center justify-center mb-4">
-            <img src="/images/eqc-logo.png" alt="EQC" className="h-9 w-auto object-contain" />
-          </div>
-          <h2 className="text-xl font-display font-bold text-eqc-text mb-2 leading-tight">
-            Best viewed on desktop
-          </h2>
-          <p className="text-sm text-eqc-muted leading-relaxed mb-6">
-            The campus dashboard is built for the lobby screen. On a phone, head to the trainer sign-on portal for the mobile-friendly view.
-          </p>
-          <a
-            href="/trainer-sign-on.html"
-            className="block w-full bg-eqc-green text-white font-bold rounded-xl px-5 py-3 text-base hover:bg-eqc-green/90 transition-colors mb-3"
-          >
-            Go to mobile site
-          </a>
-          <button
-            type="button"
-            onClick={onDismiss}
-            className="block w-full text-xs text-eqc-muted hover:text-eqc-text font-medium underline-offset-2 hover:underline transition-colors"
-          >
-            View dashboard anyway (not recommended on mobile)
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // --- Lobby Page ---
 
@@ -673,18 +629,14 @@ export default function Lobby() {
   const [settings] = useGlobalSettings();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobileViewport();
-  const [showMobileModal, setShowMobileModal] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return sessionStorage.getItem(MOBILE_REDIRECT_DISMISSED_KEY) !== 'ok';
-  });
+  useEffect(() => {
+    if (isMobile) {
+      navigate('/mobile', { replace: true });
+    }
+  }, [isMobile, navigate]);
 
   useFluidRootFontSize();
   useAutoReset(settings.resetTimeHour);
-
-  const dismissMobileModal = () => {
-    sessionStorage.setItem(MOBILE_REDIRECT_DISMISSED_KEY, 'ok');
-    setShowMobileModal(false);
-  };
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -753,9 +705,7 @@ export default function Lobby() {
 
       <Footer onAdmin={() => navigate('/admin')} />
 
-      {isMobile && showMobileModal && (
-        <MobileRedirectModal onDismiss={dismissMobileModal} />
-      )}
+
 
       <style>{`
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
