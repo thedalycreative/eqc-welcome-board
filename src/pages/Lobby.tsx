@@ -216,62 +216,69 @@ const RoomItem = ({ room, trainers }: { room: RoomAllocation; trainers: Trainer[
 const EVENT_INTERVAL_MS = 30000;
 
 const EventList = ({ events }: { events: Event[] }) => {
+  const upcomingEvents = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return events
+      .filter(e => new Date(e.date) >= today)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [events]);
+
   const [currentIdx, setCurrentIdx] = useState(0);
 
   useEffect(() => {
-    if (events.length <= 1) return;
-    setCurrentIdx((idx) => (idx >= events.length ? 0 : idx));
+    if (upcomingEvents.length <= 1) return;
+    setCurrentIdx((idx) => (idx >= upcomingEvents.length ? 0 : idx));
     const timer = setInterval(() => {
-      setCurrentIdx((idx) => (idx + 1) % events.length);
+      setCurrentIdx((idx) => (idx + 1) % upcomingEvents.length);
     }, EVENT_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [events.length]);
+  }, [upcomingEvents.length]);
 
-  const currentEvent = events[currentIdx];
+  const currentEvent = upcomingEvents[currentIdx];
 
   return (
-    <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-lg h-full flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-3 shrink-0">
-        <div className="flex items-center gap-2">
-          <CalendarDaysIcon size={18} className="text-eqc-green" />
-          <h2 className="text-lg font-display font-bold">Upcoming Events</h2>
+    <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-lg h-full flex flex-col overflow-hidden">
+      <div className="flex items-center justify-between mb-2 shrink-0">
+        <div className="flex items-center gap-1.5">
+          <CalendarDaysIcon size={16} className="text-eqc-green" />
+          <h2 className="text-sm font-display font-bold">Upcoming Events</h2>
         </div>
-        {events.length > 1 && (
-          <div className="flex items-center gap-1.5">
-            {events.map((_, idx) => (
-              <div key={idx} className={`h-1.5 rounded-full transition-all ${idx === currentIdx ? 'bg-eqc-green w-5' : 'bg-gray-200 w-1.5'}`} />
+        {upcomingEvents.length > 1 && (
+          <div className="flex items-center gap-1">
+            {upcomingEvents.map((_, idx) => (
+              <div key={idx} className={`h-1 rounded-full transition-all ${idx === currentIdx ? 'bg-eqc-green w-4' : 'bg-gray-200 w-1'}`} />
             ))}
           </div>
         )}
       </div>
 
       <div className="flex-1 flex flex-col justify-center min-h-0 relative">
-        {events.length === 0 ? (
-          <p className="text-eqc-muted italic text-sm">No events scheduled.</p>
+        {upcomingEvents.length === 0 ? (
+          <p className="text-eqc-muted italic text-xs">No upcoming events.</p>
         ) : (
           <AnimatePresence mode="wait">
             <motion.div
               key={currentEvent.id}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -12 }}
+              exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4 }}
-              className="border-l-4 border-eqc-green pl-5 py-1"
+              className="border-l-3 border-eqc-green pl-3"
             >
-              <p className="text-[10px] font-black text-eqc-green uppercase tracking-widest mb-2">
-                {new Date(currentEvent.date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              <p className="text-[9px] font-black text-eqc-green uppercase tracking-widest mb-1">
+                {new Date(currentEvent.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
               </p>
-              <h3 className="text-base font-display font-bold text-eqc-text leading-tight mb-1">{currentEvent.title}</h3>
-              <p className="text-xs text-eqc-muted leading-relaxed line-clamp-3">{currentEvent.description}</p>
+              <h3 className="text-sm font-display font-bold text-eqc-text leading-tight mb-0.5">{currentEvent.title}</h3>
+              <p className="text-[11px] text-eqc-muted leading-snug line-clamp-2">{currentEvent.description}</p>
             </motion.div>
           </AnimatePresence>
         )}
-
       </div>
 
-      <div className="mt-4 pt-3 border-t border-gray-100 text-[10px] text-eqc-muted shrink-0 flex justify-between items-center">
+      <div className="mt-2 pt-2 border-t border-gray-100 text-[9px] text-eqc-muted shrink-0 flex justify-between items-center">
         <span>Questions? <span className="text-eqc-green font-bold">trainer@equinimcollege.com</span></span>
-        {events.length > 1 && <span className="font-bold tracking-wider uppercase">{currentIdx + 1} / {events.length}</span>}
+        {upcomingEvents.length > 1 && <span className="font-bold tracking-wider uppercase">{currentIdx + 1} / {upcomingEvents.length}</span>}
       </div>
     </div>
   );
@@ -487,13 +494,8 @@ const FloorPlan = () => {
         <MapPinCheckInside size={18} className="text-eqc-green" />
         <h2 className="text-lg font-display font-bold">Campus Map</h2>
       </div>
-      <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative flex items-center justify-center">
-        <img src={`/images/eqc-perth-youarehere-v5.png?${FLOORPLAN_VERSION}`} alt="Campus Floor Plan" className="w-full h-full object-cover scale-110" referrerPolicy="no-referrer" />
-        <div className="absolute inset-0 flex items-end justify-center pb-4 pointer-events-none">
-          <div className="bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full border border-white shadow-sm">
-            <span className="text-xs font-bold text-eqc-text uppercase tracking-widest">Level 1 - West Perth</span>
-          </div>
-        </div>
+      <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative flex items-center justify-center group">
+        <img src={`/images/eqc-campus-layout.png?${FLOORPLAN_VERSION}`} alt="Campus Floor Plan" className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" referrerPolicy="no-referrer" />
       </div>
     </div>
   );
