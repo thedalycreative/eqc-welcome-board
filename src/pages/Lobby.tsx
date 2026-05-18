@@ -14,7 +14,6 @@ import {
   Train,
   CalendarDaysIcon,
   MapPinCheckInside,
-  CogIcon,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
@@ -308,7 +307,7 @@ const Forecast7Widget = () => {
     script.src = 'https://weatherwidget.io/js/widget.min.js';
     document.body.appendChild(script);
   }, []);
-  return <div ref={ref} className="overflow-hidden rounded-2xl" style={{ width: 320, height: 80 }} />;
+  return <div ref={ref} className="overflow-hidden rounded-2xl" style={{ width: 224, height: 56 }} />;
 };
 
 // --- Campus Map ---
@@ -508,9 +507,7 @@ const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
   return (
     <footer className="bg-white border-t border-gray-100 px-6 py-1.5 flex justify-between items-center text-[11px] text-eqc-muted shrink-0">
       <div className="flex items-center gap-6">
-        <div className="bg-white border border-gray-200 rounded p-1 shrink-0">
-          <QRCodeSVG value={mobileUrl} size={36} />
-        </div>
+        <div className="font-bold tracking-wide">RTO 45758 · CRICOS 03952E</div>
         <div className="flex items-center gap-1.5">
           <MapPin size={12} className="text-red-500" />
           <span className="font-medium">2 Gordon St, West Perth WA 6005</span>
@@ -532,16 +529,16 @@ const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
           <span className="font-medium">Fire Assembly: Coolgardie St</span>
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="font-bold tracking-wide">RTO 45758 · CRICOS 03952E</div>
-        <button
-          onClick={onAdmin}
-          className="bg-eqc-green text-white p-1.5 rounded-full text-md font-light hover:bg-eqc-green/90 active:scale-95 transition-colors"
-          aria-label="Admin panel"
-        >
-          <CogIcon size={18} />
-        </button>
-      </div>
+      <button
+        onClick={onAdmin}
+        className="flex items-center gap-2 shrink-0"
+        aria-label="Admin panel"
+      >
+        <span className="text-[10px] text-eqc-muted font-medium leading-tight">Scan for<br />mobile version</span>
+        <div className="bg-white border border-gray-200 rounded p-1 shrink-0">
+          <QRCodeSVG value={mobileUrl} size={44} />
+        </div>
+      </button>
     </footer>
   );
 };
