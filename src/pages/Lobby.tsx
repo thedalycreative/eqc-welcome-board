@@ -106,7 +106,7 @@ const Header = () => {
         )}
       </div>
       <div className="flex items-center gap-3 text-right shrink min-w-0">
-        <Forecast7Widget />
+        <WeatherWidget />
         <div className="flex items-center gap-3 bg-gray-50 px-4 h-14 rounded-xl border border-gray-100 shrink-0">
           <span className="text-sm font-bold text-eqc-muted tracking-tight whitespace-nowrap">{formattedDate}</span>
           <div className="w-px h-8 bg-gray-300" />
@@ -296,31 +296,41 @@ const EventList = ({ events }: { events: Event[] }) => {
   );
 };
 
-// --- Weather Widget ---
+// --- Weather Widget (Open-Meteo, Perth) ---
 
-const Forecast7Widget = () => {
-  const ref = useRef<HTMLDivElement>(null);
+const WMO_ICONS: Record<number, string> = {
+  0: '☀️', 1: '🌤️', 2: '⛅', 3: '☁️',
+  45: '🌫️', 48: '🌫️',
+  51: '🌦️', 53: '🌦️', 55: '🌧️',
+  61: '🌧️', 63: '🌧️', 65: '🌧️',
+  71: '🌨️', 73: '🌨️', 75: '🌨️',
+  80: '🌦️', 81: '🌧️', 82: '🌧️',
+  95: '⛈️', 96: '⛈️', 99: '⛈️',
+};
+
+const WeatherWidget = () => {
+  const [weather, setWeather] = useState<{ temp: number; code: number } | null>(null);
+
   useEffect(() => {
-    if (!ref.current) return;
-    while (ref.current.firstChild) ref.current.removeChild(ref.current.firstChild);
-    const a = document.createElement('a');
-    a.className = 'weatherwidget-io';
-    a.href = 'https://forecast7.com/en/n31d95115d86/perth/';
-    a.setAttribute('data-label_1', '');
-    a.setAttribute('data-label_2', '');
-    a.setAttribute('data-theme', 'pure');
-    a.setAttribute('data-days', '3');
-    a.setAttribute('data-highcolor', '#1a7a54');
-    a.textContent = 'PERTH Weather';
-    ref.current.appendChild(a);
-    const existing = document.getElementById('weatherwidget-io-js');
-    if (existing) existing.remove();
-    const script = document.createElement('script');
-    script.id = 'weatherwidget-io-js';
-    script.src = 'https://weatherwidget.io/js/widget.min.js';
-    document.body.appendChild(script);
+    const fetchWeather = () => {
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=-31.95&longitude=115.86&current=temperature_2m,weather_code&timezone=Australia%2FPerth')
+        .then(r => r.json())
+        .then(d => setWeather({ temp: Math.round(d.current.temperature_2m), code: d.current.weather_code }))
+        .catch(() => {});
+    };
+    fetchWeather();
+    const id = setInterval(fetchWeather, 600_000);
+    return () => clearInterval(id);
   }, []);
-  return <div ref={ref} className="overflow-hidden rounded-xl h-14 w-[min(320px,25vw)] shrink-0" />;
+
+  if (!weather) return null;
+
+  return (
+    <div className="flex items-center gap-1.5 bg-gray-50 px-3 h-10 rounded-lg border border-gray-100 shrink-0">
+      <span className="text-lg leading-none">{WMO_ICONS[weather.code] ?? '🌡️'}</span>
+      <span className="text-sm font-bold text-eqc-text tabular-nums">{weather.temp}°</span>
+    </div>
+  );
 };
 
 // --- Campus Map ---
