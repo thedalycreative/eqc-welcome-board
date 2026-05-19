@@ -65,11 +65,6 @@ export default function AdminTrainers() {
       const path = `trainers/${trainerId}.jpg`;
       const photoUrl = await uploadImage(blob, path);
 
-      // If editing and the URL changed, delete the old image
-      if (cropState.existingPhotoUrl && cropState.existingPhotoUrl !== photoUrl) {
-        try { await deleteImage(cropState.existingPhotoUrl); } catch { /* ignore */ }
-      }
-
       await setDoc(doc(db, 'trainers', trainerId), {
         id: trainerId,
         name: cropState.name,
@@ -173,10 +168,9 @@ export default function AdminTrainers() {
               <div className="flex items-start gap-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-100 bg-gray-50 shrink-0 flex items-center justify-center">
                   {trainer.photoUrl ? (
-                    <img src={trainer.photoUrl} alt={trainer.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <ImageOff size={24} className="text-gray-300" />
-                  )}
+                    <img src={trainer.photoUrl} alt={trainer.name} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; e.currentTarget.parentElement!.querySelector('.fallback-icon')?.classList.remove('hidden'); }} />
+                  ) : null}
+                  <ImageOff size={24} className={`text-gray-300 fallback-icon ${trainer.photoUrl ? 'hidden' : ''}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-base truncate">{trainer.name}</h3>

@@ -8,7 +8,7 @@ import { storage } from './firebase';
 export async function uploadImage(blob: Blob, path: string): Promise<string> {
   try {
     const fileRef = ref(storage, path);
-    const snapshot = await uploadBytes(fileRef, blob);
+    const snapshot = await uploadBytes(fileRef, blob, { contentType: blob.type || 'image/jpeg' });
     return await getDownloadURL(snapshot.ref);
   } catch (err: any) {
     const code = err?.code || '';

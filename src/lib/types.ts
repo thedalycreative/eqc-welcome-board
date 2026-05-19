@@ -92,6 +92,7 @@ export interface GlobalSettings {
   rssRefreshIntervalMin: number;
   rssScrollSpeed: 'slow' | 'medium' | 'fast';
   rssEnabled: boolean;
+  rssRibbonColor: string;
   wifiSsid: string;
   wifiPassword: string;
   contacts: Contact[];
@@ -99,11 +100,12 @@ export interface GlobalSettings {
 
 export const DEFAULT_SETTINGS: GlobalSettings = {
   carouselSlideDurationMs: 6000,
-  carouselTransition: 'fade',
+  carouselTransition: 'slide',
   resetTimeHour: 22,
   rssRefreshIntervalMin: 15,
   rssScrollSpeed: 'medium',
   rssEnabled: true,
+  rssRibbonColor: '#1a3a2a',
   wifiSsid: 'EQC-network',
   wifiPassword: '',
   contacts: [],

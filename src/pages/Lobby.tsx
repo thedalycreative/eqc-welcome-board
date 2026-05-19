@@ -92,10 +92,10 @@ const Header = () => {
           <p className="text-lg text-eqc-muted font-medium mt-1">Perth Campus</p>
         </div>
       </div>
-      <div className="flex items-center gap-4 text-right">
+      <div className="flex items-center gap-3 text-right shrink min-w-0">
         <Forecast7Widget />
-        <div className="flex items-center gap-4 bg-gray-50 px-5 h-14 rounded-xl border border-gray-100">
-          <span className="text-sm font-bold text-eqc-muted tracking-tight">{formattedDate}</span>
+        <div className="flex items-center gap-3 bg-gray-50 px-4 h-14 rounded-xl border border-gray-100 shrink-0">
+          <span className="text-sm font-bold text-eqc-muted tracking-tight whitespace-nowrap">{formattedDate}</span>
           <div className="w-px h-8 bg-gray-300" />
           <div className="flex items-baseline gap-1 w-[130px] justify-end tabular-nums">
             <span className="text-2xl font-bold text-eqc-text tracking-tight leading-none tabular-nums">{formattedTime.split(' ')[0]}</span>
@@ -147,7 +147,7 @@ const RoomItem = ({ room, trainers }: { room: RoomAllocation; trainers: Trainer[
         ${isLive ? 'bg-eqc-green text-white shadow-xl' : isBreak ? 'bg-orange-500 text-white shadow-lg' : isInactive ? 'bg-gray-300 text-gray-500 shadow-sm' : 'bg-white border border-gray-100 shadow-sm'}
       `}
     >
-      <div className="flex flex-row items-center gap-4">
+      <div className="flex flex-row items-center gap-3">
         <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
           isLive ? 'bg-white/20' : isBreak ? 'bg-white/20' : isInactive ? 'bg-gray-200' : 'bg-gray-100'
         }`}>
@@ -155,14 +155,14 @@ const RoomItem = ({ room, trainers }: { room: RoomAllocation; trainers: Trainer[
         </div>
         {hasContent && room.trainer ? (
           <>
-            <div className={`w-10 h-10 rounded-full overflow-hidden border-2 shrink-0 bg-white ${isInactive ? 'border-gray-200' : 'border-white/40'}`}>
+            <div className={`w-[3.5rem] h-[3.5rem] rounded-full overflow-hidden border-[3px] shrink-0 bg-white ${isInactive ? 'border-gray-200' : 'border-white/40'}`}>
               <img src={trainerImg} alt={room.trainer} className="w-full h-full object-cover object-top" />
             </div>
-            <span className="font-sans font-semibold text-xl leading-none">{room.trainer}</span>
+            <span className="font-sans font-bold text-3xl leading-none">{room.trainer}</span>
           </>
         ) : isBreak ? (
           <>
-            <Coffee size={22} />
+            <Coffee size={24} />
             <span className="font-sans font-semibold text-xl leading-none italic">On Break</span>
           </>
         ) : (
@@ -293,8 +293,8 @@ const Forecast7Widget = () => {
     const a = document.createElement('a');
     a.className = 'weatherwidget-io';
     a.href = 'https://forecast7.com/en/n31d95115d86/perth/';
-    a.setAttribute('data-label_1', 'PERTH');
-    a.setAttribute('data-label_2', 'Weather');
+    a.setAttribute('data-label_1', '');
+    a.setAttribute('data-label_2', '');
     a.setAttribute('data-theme', 'pure');
     a.setAttribute('data-days', '3');
     a.setAttribute('data-highcolor', '#1a7a54');
@@ -307,7 +307,7 @@ const Forecast7Widget = () => {
     script.src = 'https://weatherwidget.io/js/widget.min.js';
     document.body.appendChild(script);
   }, []);
-  return <div ref={ref} className="overflow-hidden rounded-2xl" style={{ width: 224, height: 56 }} />;
+  return <div ref={ref} className="overflow-hidden rounded-xl h-14 w-[min(320px,25vw)] shrink-0" />;
 };
 
 // --- Campus Map ---
@@ -390,16 +390,16 @@ const CampusLifeCarousel = () => {
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden h-full flex flex-col">
-      <div className="flex-1 relative bg-gray-50 min-h-0">
+      <div className="flex-1 relative bg-gray-50 min-h-0 overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.img
             key={current.id}
             src={current.imageUrl}
             alt={current.caption || 'Campus life'}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6 }}
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '-100%', opacity: 0 }}
+            transition={{ duration: 1, ease: 'easeInOut' }}
             className="absolute inset-0 w-full h-full object-cover"
           />
         </AnimatePresence>
@@ -436,7 +436,7 @@ const RssTicker = () => {
   const duration = RSS_SCROLL_DURATIONS[settings.rssScrollSpeed] || RSS_SCROLL_DURATIONS.medium;
 
   return (
-    <div className="bg-eqc-bg/95 backdrop-blur-sm border-t border-white/10 text-white py-2 overflow-hidden shrink-0 group">
+    <div className="backdrop-blur-sm border-t border-white/10 text-white py-2 overflow-hidden shrink-0 group" style={{ backgroundColor: settings.rssRibbonColor || '#1a3a2a' }}>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2 shrink-0 px-4 border-r border-white/20">
           <Rss size={14} className="text-eqc-green" />
@@ -493,8 +493,15 @@ const FloorPlan = () => {
         <MapPinCheckInside size={18} className="text-eqc-green" />
         <h2 className="text-lg font-display font-bold">Campus Map</h2>
       </div>
-      <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative flex items-center justify-center group">
-        <img src={`/images/eqc-campus-layout.png?${FLOORPLAN_VERSION}`} alt="Campus Floor Plan" className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110" referrerPolicy="no-referrer" />
+      <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative flex items-center justify-center">
+        <img src={`/images/eqc-campus-layout.png?${FLOORPLAN_VERSION}`} alt="Campus Floor Plan" className="w-full h-full object-cover animate-float" referrerPolicy="no-referrer" />
+        <style>{`
+          @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+          }
+          .animate-float { animation: float 4s ease-in-out infinite; }
+        `}</style>
       </div>
     </div>
   );
