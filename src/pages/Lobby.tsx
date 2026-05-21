@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Clock,
   MapPin,
@@ -28,8 +27,6 @@ import { useRssTicker } from '../lib/rss';
 import { Rss } from 'lucide-react';
 
 const MOBILE_REDIRECT_DISMISSED_KEY = 'eqc-mobile-redirect-dismissed';
-const FLOORPLAN_VERSION = 'v5';
-
 const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 const TRAINER_SIGN_ON_URL = `${import.meta.env.BASE_URL}trainer-sign-on.html`;
 
@@ -168,10 +165,10 @@ const RoomItem = ({ room, trainers }: { room: RoomAllocation; trainers: Trainer[
         </div>
         {hasContent && room.trainer ? (
           <>
-            <div className={`w-[3.5rem] h-[3.5rem] rounded-full overflow-hidden border-[3px] shrink-0 bg-white ${isInactive ? 'border-gray-200' : 'border-white/40'}`}>
+            <div className={`w-[5.5rem] h-[5.5rem] rounded-full overflow-hidden border-[4px] shrink-0 bg-white ${isInactive ? 'border-gray-200' : 'border-white/40'}`}>
               <img src={trainerImg} alt={room.trainer} className="w-full h-full object-cover object-top" />
             </div>
-            <span className="font-sans font-bold text-3xl leading-none">{room.trainer}</span>
+            <span className="font-sans font-black text-5xl leading-none tracking-tight">{room.trainer}</span>
           </>
         ) : isBreak ? (
           <>
@@ -228,13 +225,14 @@ const RoomItem = ({ room, trainers }: { room: RoomAllocation; trainers: Trainer[
 const EVENT_INTERVAL_MS = 30000;
 
 const EventList = ({ events }: { events: Event[] }) => {
+  const todayKey = new Date().toDateString();
   const upcomingEvents = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return events
       .filter(e => new Date(e.date) >= today)
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [events]);
+  }, [events, todayKey]);
 
   const [currentIdx, setCurrentIdx] = useState(0);
 
@@ -517,7 +515,7 @@ const FloorPlan = () => {
         <h2 className="text-lg font-display font-bold">Campus Map</h2>
       </div>
       <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative flex items-center justify-center">
-        <img src={`/images/eqc-campus-layout.png?${FLOORPLAN_VERSION}`} alt="Campus Floor Plan" className="w-full h-full object-cover animate-float" referrerPolicy="no-referrer" />
+        <img src="/images/eqc-campus-layout.png" alt="Campus Floor Plan" className="w-full h-full object-cover animate-float" referrerPolicy="no-referrer" />
         <style>{`
           @keyframes float {
             0%, 100% { transform: translateY(0); }
@@ -532,7 +530,7 @@ const FloorPlan = () => {
 
 // --- Footer ---
 
-const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
+const Footer = () => {
   const mobileUrl = typeof window !== 'undefined' ? `${window.location.origin}/mobile` : '';
   return (
     <footer className="bg-white border-t border-gray-100 px-6 py-1.5 flex justify-between items-center text-[11px] text-eqc-muted shrink-0">
@@ -562,16 +560,12 @@ const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
           <span className="font-medium">Fire Assembly: Coolgardie St</span>
         </div>
       </div>
-      <button
-        onClick={onAdmin}
-        className="flex items-center gap-2 shrink-0"
-        aria-label="Admin panel"
-      >
-        <span className="text-[10px] text-eqc-muted font-medium leading-tight">Scan for<br />mobile version</span>
+      <div className="flex items-center gap-2 shrink-0">
+        <span className="text-[10px] text-eqc-muted font-bold leading-tight text-right">Scan to view<br />mobile site</span>
         <div className="bg-white border border-gray-200 rounded p-1 shrink-0">
           <QRCodeSVG value={mobileUrl} size={44} />
         </div>
-      </button>
+      </div>
     </footer>
   );
 };
@@ -706,7 +700,6 @@ function useIsMobileViewport(): boolean {
 }
 
 export default function Lobby() {
-  const navigate = useNavigate();
   const [rooms] = useRooms(INITIAL_ROOMS);
   const [events] = useEvents(IS_DEMO_MODE ? DEMO_EVENTS : []);
   const announcements = useAnnouncements();
@@ -792,7 +785,7 @@ export default function Lobby() {
 
       <RssTicker />
 
-      <Footer onAdmin={() => navigate('/admin')} />
+      <Footer />
 
       {isMobile && showMobileModal && (
         <MobileRedirectModal onDismiss={dismissMobileModal} />

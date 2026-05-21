@@ -122,11 +122,14 @@ export default function Mobile() {
 
   useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const upcomingEvents = useMemo(() =>
-    events.filter(e => new Date(e.date) >= today).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-  , [events]);
+  const todayKey = new Date().toDateString();
+  const upcomingEvents = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return events
+      .filter(e => new Date(e.date) >= today)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [events, todayKey]);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">

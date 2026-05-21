@@ -193,6 +193,7 @@ export function useResetCountdown(resetHour: number = 22) {
 /**
  * Automatically resets all rooms to "available" once the daily reset hour is reached.
  * Checks every 30 seconds; uses localStorage to prevent duplicate resets on the same day.
+ * Also catches up on missed resets when the page loads on a new day.
  */
 export function useAutoReset(resetHour: number) {
   useEffect(() => {
@@ -200,11 +201,20 @@ export function useAutoReset(resetHour: number) {
 
     const check = async () => {
       const now = new Date();
-      if (now.getHours() < resetHour) return;
-
       const today = now.toDateString();
       const lastReset = localStorage.getItem('eqc-last-reset-date');
       if (lastReset === today) return;
+
+      // If this is the very first run (no previous reset), wait until the reset hour
+      if (!lastReset && now.getHours() < resetHour) return;
+
+      // Otherwise reset: either it's past the reset hour today,
+      // or we missed a previous day's reset and need to catch up
+      if (lastReset && now.getHours() < resetHour) {
+        // Catch-up: last reset was a previous day, reset immediately
+      } else if (now.getHours() < resetHour) {
+        return;
+      }
 
       const snapshot = await getDocs(collection(db, 'rooms'));
       for (const d of snapshot.docs) {
