@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -131,7 +131,7 @@ function formatBreakRemaining(breakUntil?: string): string | null {
   return minutes === 1 ? '1 min' : `${minutes} min`;
 }
 
-const RoomItem = ({ room, trainers }: { room: RoomAllocation; trainers: Trainer[] }) => {
+const RoomItem: React.FC<{ room: RoomAllocation; trainers: Trainer[] }> = ({ room, trainers }) => {
   const isLive = room.status === 'live';
   const isBreak = room.status === 'break';
   const isInactive = room.status === 'inactive';

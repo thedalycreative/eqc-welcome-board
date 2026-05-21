@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent, useMemo, useCallback, type ChangeEvent } from 'react';
+import React, { useState, useEffect, FormEvent, useMemo, useCallback, type ChangeEvent } from 'react';
 import { Coffee, LogOut, Check, X, Clock, AlertTriangle, ExternalLink, Camera, Play, Edit3, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import toast, { Toaster } from 'react-hot-toast';
@@ -69,7 +69,7 @@ interface SignedOnTileProps {
   onEditBreak: (room: RoomAllocation) => void;
 }
 
-function SignedOnTile({ room, trainers, onBreak, onSignOff, onUpdatePhoto, onEndBreak, onEditBreak }: SignedOnTileProps) {
+const SignedOnTile: React.FC<SignedOnTileProps> = ({ room, trainers, onBreak, onSignOff, onUpdatePhoto, onEndBreak, onEditBreak }) => {
   const [expanded, setExpanded] = useState(false);
   const matchedTrainer = trainers.find(t => t.name.toLowerCase() === (room.trainer || '').toLowerCase());
   const photoUrl = matchedTrainer?.photoUrl || getTrainerImagePath(room.trainer);
@@ -152,7 +152,7 @@ function SignedOnTile({ room, trainers, onBreak, onSignOff, onUpdatePhoto, onEnd
       </AnimatePresence>
     </motion.div>
   );
-}
+};
 
 // --- Photo Update Modal (file pick + crop + upload) ---
 

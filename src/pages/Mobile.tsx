@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   MapPin, Phone, Mail, Flame, BriefcaseMedical, Coffee, BookOpen,
   Calendar, Wifi, Copy, Check, Rss, ExternalLink, ChevronDown,
@@ -13,7 +13,7 @@ import { useRssTicker } from '../lib/rss';
 
 const CAMPUS_MAP_URL = 'https://maps.google.com/maps?q=2+Gordon+St+West+Perth+WA+6005&t=&z=16&ie=UTF8&iwloc=&output=embed';
 
-const MobileRoomCard = ({ room }: { room: RoomAllocation }) => {
+const MobileRoomCard: React.FC<{ room: RoomAllocation }> = ({ room }) => {
   const isLive = room.status === 'live';
   const isBreak = room.status === 'break';
   const isInactive = room.status === 'inactive';

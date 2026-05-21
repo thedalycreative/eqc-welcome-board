@@ -1,4 +1,4 @@
-import { useState, useCallback, FormEvent } from 'react';
+import React, { useState, useCallback, FormEvent } from 'react';
 import { Users, Plus, Trash2, Edit3, X, Check, Upload, ImageOff } from 'lucide-react';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, FormEvent } from 'react';
+import React, { useState, useEffect, useMemo, FormEvent } from 'react';
 import { Plus, Calendar, Trash2, Edit3, Save, CheckCircle, AlertCircle, X, Search,
   GraduationCap, PartyPopper, Megaphone, Trophy, Users, Presentation, BookOpen,
   Music, Paintbrush, Globe, HeartHandshake, Sparkles, Star, Lightbulb, Flag,
