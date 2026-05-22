@@ -1,105 +1,375 @@
-# EQC Perth Campus Dashboard
+<p align="center">
+  <img src="public/images/eqc-sheild.png" alt="EQC Institute" width="120" />
+</p>
 
-> A live lobby dashboard for the **Equinim College -- Perth Campus**. Shows real-time room allocations, weather, trainer photos, scrolling alerts, upcoming events, campus life carousel, and floorplan -- all updating across every screen on campus.
+<h1 align="center">EQC Perth Campus Dashboard</h1>
 
-[![Live Site](https://img.shields.io/badge/Live-Vercel-1a7a54?style=for-the-badge)](https://eqc-dashboard-by-25g.vercel.app)
-[![Stack](https://img.shields.io/badge/Stack-React_19_%C2%B7_Vite_%C2%B7_Firebase-1A1A1A?style=for-the-badge)](#)
+<p align="center">
+  <strong>A real-time, multi-screen campus management system built by Intake 25G</strong><br/>
+  <em>Equinim College &middot; Perth Campus &middot; West Perth, WA</em>
+</p>
+
+<p align="center">
+  <a href="https://www.perth-eqc.xyz"><img src="https://img.shields.io/badge/LIVE_SITE-www.perth--eqc.xyz-1a7a54?style=for-the-badge&logo=vercel&logoColor=white" alt="Live Site" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/React_19-TypeScript-blue?style=for-the-badge&logo=react&logoColor=white" alt="React 19" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/Firebase-Realtime-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/Vite_6-Build-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /></a>
+  <a href="#"><img src="https://img.shields.io/badge/Tailwind_v4-Styling-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind" /></a>
+</p>
 
 ---
 
-## Team
+<p align="center">
+  <img src="public/images/IMG_2403.jpeg" alt="Team members reviewing the live dashboard in the EQC lobby" width="700" />
+</p>
 
-| Name | Role |
-|---|---|
-| **Tim Daly** | Developer, project lead |
-| **Intake 25g** | Cyber Security cohort contributing to the build |
+<p align="center"><em>Intake 25G reviewing the live dashboard on the campus lobby screen &mdash; shipped, running, and updating in real time.</em></p>
+
+---
+
+## What is this?
+
+The **EQC Perth Campus Dashboard** is a full-stack web application that powers the lobby display at the Equinim College Perth campus. It runs 24/7 on a mounted screen in the reception area, showing visitors and students:
+
+- **Who is teaching in which room** &mdash; updated live as trainers sign on and off
+- **Campus floor plan** &mdash; interactive SVG map of the Level 1 campus layout
+- **Upcoming events** &mdash; graduation galas, guest speakers, assessment deadlines
+- **Scrolling news ticker** &mdash; curated RSS feeds from cybersecurity, web dev, and local Perth news
+- **Campus life carousel** &mdash; rotating photos of student activities
+- **Real-time weather** &mdash; current Perth conditions pulled from Open-Meteo
+- **WiFi credentials** &mdash; network name and password for visitors
+- **Emergency info** &mdash; fire assembly point, first aid location, campus contacts
+- **QR code** &mdash; scan to open the mobile companion on your phone
+
+It's not just a display. Behind the scenes, the system includes a **trainer sign-on portal**, an **8-panel admin dashboard**, a **mobile companion app**, and an **automated nightly reset** &mdash; all synced in real time through Firebase Firestore.
+
+This project was built from scratch by the students of **Intake 25G** during their Web Development unit at EQC Institute, under the supervision of trainer **Timothy Daly**.
+
+---
+
+## Meet the Team
+
+<p align="center">
+  <img src="public/images/IMG_2645.jpeg" alt="Intake 25G team photo in front of the campus dashboard" width="600" />
+</p>
+
+<p align="center"><em>The Intake 25G crew. From left: Chelsea, Senthamizhselvi, Tim, Neil, Walter, Alex.</em></p>
+
+| Name | Role | What They Did |
+|------|------|---------------|
+| **Timothy Daly** | Trainer & Project Manager | Architected the system, mentored the team, managed Firebase infrastructure, and drove the project from concept to production deployment |
+| **Chelsea Reupena** | Front End Manager | Led the lobby display design, built responsive layouts, implemented the room allocation cards and campus information panels |
+| **Jarrahd Gibson** | Back End Manager | Owned the Firebase backend &mdash; Firestore collections, Storage buckets, real-time data hooks, and the auto-reset system |
+| **Joseph O'Donnell** | Project Coordinator | Managed sprint planning, tracked deliverables, coordinated between front-end and back-end teams, and ensured features shipped on schedule |
+| **Senthamizhselvi Baskaran** | Full-Stack Support | Worked across the stack &mdash; from admin panel components to Firestore integration, CSS refinements, and mobile layout adjustments |
+| **Walter Harvey** | Full-Stack Support | Contributed to both the trainer sign-on interface and admin panels, implemented form validation and real-time data binding |
+| **Neil Hart** | Front End Support | Built UI components for the mobile companion view, styled the events carousel, and refined the responsive breakpoints |
+| **Alex Green** | Project Support Officer | Assisted with testing, QA, asset management, and documentation &mdash; the glue that kept things moving |
+| **Clare Stone** | Quality & Compliance Officer | Ensured RTO compliance requirements were met in the footer, validated accessibility standards, and reviewed content accuracy |
+| **Duke McNouget Daly** | Branch Officer | Provided morale support and supervised lunch breaks |
+
+<p align="center">
+  <img src="public/images/IMG_2632.jpeg" alt="Team members working together on laptops" width="500" />
+</p>
+
+<p align="center"><em>Senthamizhselvi, Chelsea, and Neil grinding through a sprint in the classroom.</em></p>
+
+---
+
+## The Four Interfaces
+
+This isn't a single page &mdash; it's a **multi-interface system** with four distinct views, each designed for a different user:
+
+### 1. Lobby Display (`/`)
+
+The main event. This runs full-screen on the campus TV and is designed to be read from across the room.
+
+**What you see:**
+- **Room allocation board** &mdash; 6 rooms showing trainer name, photo, course, intake number, and live/break/available status
+- **Campus floor plan** &mdash; SVG map rendered at crisp resolution on any screen size
+- **Image carousel** &mdash; rotating campus life photos with configurable slide duration and transitions
+- **Events tile** &mdash; upcoming events with auto-rotation and dot navigation
+- **Google Maps embed** &mdash; interactive campus location with nearby cafes and transport
+- **Nearby amenities** &mdash; walking distances to Gordon St Garage, Pony Express, City West Station
+- **News ticker** &mdash; scrolling RSS headlines from 21 curated feeds across 5 categories
+- **Weather widget** &mdash; live Perth temperature and conditions from Open-Meteo
+- **Footer** &mdash; RTO number, CRICOS code, address, phone, email, emergency info, and QR code
+
+**Technical highlights:**
+- Firebase `onSnapshot` listeners push updates to every connected screen instantly
+- Break countdown timers update every second with live remaining-time display
+- Weather data refreshes on an interval with animated cloud/sun icons
+- Framer Motion handles smooth transitions on the carousel and event rotation
+- Fully responsive grid layout with `grid-rows-[2fr_1.5fr_0.8fr]` for the right panel
+
+---
+
+### 2. Mobile Companion (`/mobile`)
+
+Students scan the QR code on the lobby screen and get this on their phone.
+
+**What you see:**
+- Compact room status cards with trainer photo, name, intake, and course
+- Campus contact info with tap-to-call and tap-to-email
+- Embedded Google Map
+- Upcoming events in a horizontal scroll carousel
+- WiFi credentials with tap-to-copy
+- Staff contacts section
+- Expandable RSS news feed
+- Fixed bottom navigation: Lobby / Sign On / Map
+
+**Technical highlights:**
+- Fully responsive design optimised for 390px+ viewports
+- `snap-x snap-mandatory` CSS for smooth horizontal event scrolling
+- `navigator.clipboard` API for one-tap WiFi credential copying
+- React Hot Toast for copy confirmation feedback
+
+---
+
+### 3. Trainer Sign-On Portal (`/trainer-sign-on`)
+
+Trainers use this to check in for their classes. When they sign on, the lobby display updates in real time.
+
+**What you see:**
+- Currently signed-on trainers with expandable detail cards
+- Sign-on form: trainer name, room, course, intake, topic
+- Break management: preset durations (15/30/45/60 min) or custom input
+- Live break countdown with visual timer
+- Sign-off button with confirmation
+- Trainer photo update with inline cropping
+
+**Technical highlights:**
+- Sign-on/sign-off events are logged to the `signOnLog` Firestore collection for audit trail
+- Break duration stored as ISO timestamp (`breakUntil`) for precise countdown calculation
+- React Easy Crop provides circular crop interface for trainer profile photos
+- Photos uploaded to Firebase Storage at 512px width, JPEG format
+
+---
+
+### 4. Admin Dashboard (`/admin`)
+
+Password-protected control centre with 8 management panels:
+
+| Panel | What it controls |
+|-------|-----------------|
+| **Rooms** | Manual room allocation override, status management |
+| **Events** | Create/edit/delete events with 22 icon options and date picker |
+| **Alerts** | Scrolling announcements with color, size, speed, emoji, and expiry controls |
+| **Trainers** | Trainer profiles with photo upload, crop, bio, and active/inactive toggle |
+| **Carousel** | Campus life photo management with 16:9 crop, zoom, rotation, and reorder |
+| **RSS Feeds** | 21 curated feeds across 5 categories with enable/disable and custom URL support |
+| **Sign-On Log** | Searchable, filterable, paginated history of all trainer sign-on/sign-off events |
+| **Settings** | WiFi credentials, carousel timing, daily reset hour, RSS refresh interval, staff contacts |
+
+**Technical highlights:**
+- Sidebar navigation with React Router nested routes
+- Password gate via `VITE_ADMIN_PASSWORD` environment variable
+- Carousel images processed to WebP format at 1920px width for optimal file size
+- Atomic Firestore `writeBatch` operations for carousel reordering
+- Real-time preview for announcement styling before publishing
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React 19, TypeScript, Vite 6 |
-| Styling | Tailwind CSS v4 |
-| Animation | Motion (Framer Motion) |
-| Icons | Lucide React |
-| Real-time data | Firebase Firestore (`onSnapshot` listeners) |
-| File storage | Firebase Storage (trainer photos, carousel images) |
-| Routing | React Router v7 (BrowserRouter) |
-| QR code | qrcode.react |
-| Image cropping | react-easy-crop |
-| Notifications | react-hot-toast |
-| RSS parsing | rss-parser |
-| Hosting | Vercel (auto-deploy on push to `main`) |
+This project uses a modern, production-grade stack:
+
+| Layer | Technology | Version | Purpose |
+|-------|-----------|---------|---------|
+| **Framework** | React | 19.0.0 | Component architecture with hooks |
+| **Language** | TypeScript | ~5.8 | Full type safety across the entire codebase |
+| **Build** | Vite | 6.2.0 | Lightning-fast HMR and optimised production builds |
+| **Routing** | React Router | 7.15.0 | Client-side navigation with nested admin routes |
+| **Database** | Firebase Firestore | 12.13.0 | Real-time NoSQL database with `onSnapshot` listeners |
+| **Storage** | Firebase Storage | 12.13.0 | Trainer photos and carousel images |
+| **Styling** | Tailwind CSS | 4.1.14 | Utility-first CSS with custom `eqc-green` (#1a7a54) theme |
+| **Animation** | Framer Motion | 12.23.24 | Smooth transitions, `AnimatePresence`, and spring physics |
+| **Icons** | Lucide React | latest | 40+ icons used across the interface |
+| **Notifications** | React Hot Toast | 2.6.0 | Non-intrusive success/error toasts |
+| **Image Crop** | React Easy Crop | 5.5.7 | Circular and rectangular crop with zoom and rotation |
+| **QR Code** | qrcode.react | 4.2.0 | Dynamic QR code generation for lobby display |
+| **RSS** | rss-parser | 3.13.0 | Parse feeds from 21 curated news sources |
+| **Hosting** | Vercel | &mdash; | Auto-deploy on push to `main`, custom domain |
 
 ---
 
-## Folder Structure
+## Architecture & Data Flow
 
 ```
-src/
-  App.tsx                  # Router setup
-  main.tsx                 # Entry point
-  index.css                # Tailwind + global styles
-  lib/
-    firebase.ts            # Firebase config and init
-    hooks.ts               # Real-time Firestore hooks
-    rss.ts                 # RSS ticker logic
-    storage.ts             # Firebase Storage upload/delete/crop utilities
-    trainers.ts            # Trainer image helpers
-    types.ts               # Shared TypeScript interfaces
-  pages/
-    Lobby.tsx              # Main lobby dashboard (full-screen)
-    Mobile.tsx             # Mobile companion view
-    TrainerSignOn.tsx       # Trainer sign-on portal
-    Admin.tsx              # Admin shell (sidebar + outlet)
-    admin/
-      Rooms.tsx            # Room allocation management
-      Events.tsx           # Event scheduling with icon picker
-      Alerts.tsx           # Scrolling alert management
-      Carousel.tsx         # Campus life photo carousel
-      Trainers.tsx         # Trainer profile management
-      RssFeeds.tsx         # RSS feed library and ticker settings
-      Settings.tsx         # Global settings (carousel, WiFi, contacts)
-      SignOnLog.tsx         # Historical sign-on/sign-off log
-public/
-  images/                  # Static assets (campus map, icons)
+                    +------------------+
+                    |   Vercel (CDN)   |
+                    |  www.perth-eqc.xyz |
+                    +--------+---------+
+                             |
+              +--------------+--------------+
+              |              |              |
+         +----+----+   +----+----+   +-----+-----+
+         |  Lobby  |   | Mobile  |   |  Trainer   |
+         | Display |   |Companion|   |  Sign-On   |
+         +----+----+   +----+----+   +-----+-----+
+              |              |              |
+              +--------------+--------------+
+                             |
+                    +--------+---------+
+                    | Firebase Firestore|  <-- Real-time onSnapshot listeners
+                    |   9 Collections   |
+                    +--------+---------+
+                             |
+                    +--------+---------+
+                    | Firebase Storage  |  <-- Trainer photos, carousel images
+                    +------------------+
+                             |
+                    +--------+---------+
+                    |   Admin Panel    |  <-- Password-protected, 8 panels
+                    +------------------+
+```
+
+### Firestore Collections
+
+| Collection | Documents | Real-time? | Purpose |
+|-----------|-----------|:----------:|---------|
+| `rooms` | 6 | Yes | Current room allocations (reset nightly) |
+| `trainers` | Dynamic | Yes | Trainer profiles with photos |
+| `events` | Dynamic | Yes | Upcoming and past events |
+| `announcements` | Dynamic | Yes | Active scrolling alerts (auto-expire) |
+| `carousel` | Dynamic | Yes | Ordered campus life photos |
+| `signOnLog` | Append-only | Yes | Trainer sign-on/sign-off audit trail |
+| `rssFeeds` | 21+ | Yes | RSS feed source configuration |
+| `staff` | Dynamic | Yes | Staff member records |
+| `settings/global` | 1 | Yes | App-wide configuration singleton |
+
+---
+
+## Key Technical Patterns
+
+### Real-Time Data Hooks
+
+Every piece of data in this app updates in real time. No polling, no manual refresh. When a trainer signs on in Room 3, every lobby screen, every mobile view, and every admin panel reflects the change instantly.
+
+```typescript
+// Every hook follows this pattern
+export function useRooms() {
+  const [rooms, setRooms] = useState<RoomAllocation[]>([]);
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'rooms'), (snapshot) => {
+      const data = snapshot.docs.map(d => d.data() as RoomAllocation);
+      data.sort((a, b) => a.id - b.id);
+      setRooms(data);
+    });
+    return unsub; // cleanup on unmount
+  }, []);
+  return [rooms, setRooms] as const;
+}
+```
+
+### Automated Nightly Reset
+
+At 10:00 PM every night, all rooms reset to "Available" automatically. If the dashboard was powered off overnight, the system catches up on the missed reset when it boots the next morning.
+
+```typescript
+// Catches up on missed resets across day boundaries
+const lastReset = localStorage.getItem('eqc-last-reset-date');
+if (lastReset !== today) {
+  // Reset all rooms to 'available'
+  // Mark today as reset
+}
+```
+
+### Image Processing Pipeline
+
+Trainer photos and carousel images go through a full processing pipeline:
+
+1. **File selection** &rarr; validate format and size
+2. **Data URL conversion** &rarr; `readFileAsDataURL()`
+3. **Crop modal** &rarr; React Easy Crop with zoom (1-4x) and rotation (-180 to 180 deg)
+4. **Blob extraction** &rarr; `getCroppedBlob()` at target resolution
+5. **Upload** &rarr; Firebase Storage (trainers: 512px JPEG, carousel: 1920px WebP)
+6. **Firestore reference** &rarr; URL stored in document
+7. **UI update** &rarr; instant via `onSnapshot` listener
+
+### Stale Event Filter
+
+The events display automatically hides past events, even if the dashboard has been running continuously for days. A `todayKey` dependency forces the `useMemo` to recompute when the calendar date changes:
+
+```typescript
+const todayKey = new Date().toDateString();
+const upcomingEvents = useMemo(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return events.filter(e => new Date(e.date) >= today);
+}, [events, todayKey]);
+```
+
+---
+
+## Project Structure
+
+```
+eqc-dashboard-by-25g/
+  src/
+    App.tsx                    # Router configuration (13 routes)
+    main.tsx                   # React 19 entry point
+    index.css                  # Tailwind v4 + custom theme
+    lib/
+      firebase.ts              # Firebase app initialisation
+      hooks.ts                 # 10 custom hooks (rooms, events, trainers, etc.)
+      types.ts                 # 12 TypeScript interfaces
+      storage.ts               # Upload, crop, delete utilities
+      rss.ts                   # RSS ticker aggregation hook
+      trainers.ts              # Known trainer photo path resolver
+    pages/
+      Lobby.tsx                # Main lobby display (~800 lines)
+      Mobile.tsx               # Mobile companion view
+      TrainerSignOn.tsx        # Trainer sign-on portal (~780 lines)
+      Admin.tsx                # Admin shell with sidebar
+      admin/
+        Rooms.tsx              # Room management
+        Events.tsx             # Event scheduling + icon picker
+        Alerts.tsx             # Announcement system
+        Carousel.tsx           # Photo carousel management
+        Trainers.tsx           # Trainer profile management
+        RssFeeds.tsx           # RSS feed configuration
+        Settings.tsx           # Global settings
+        SignOnLog.tsx          # Attendance history
+  public/
+    images/                    # Static assets (SVG floor plan, team photos)
+  .vercel/                     # Vercel project config
 ```
 
 ---
 
 ## Routes
 
-| Route | Purpose |
-|---|---|
-| `/` | Lobby dashboard -- the campus screen |
-| `/mobile` | Mobile companion view |
-| `/trainer-sign-on` | Trainer sign-on form (break controls, photo update) |
-| `/admin` | Admin panel (password-gated) |
-| `/admin/rooms` | Room allocation management |
-| `/admin/events` | Event scheduling |
-| `/admin/alerts` | Scrolling banner alerts |
-| `/admin/carousel` | Campus life photo carousel |
-| `/admin/trainers` | Trainer profile management |
-| `/admin/signon-log` | Sign-on / sign-off history |
-| `/admin/rss` | RSS news ticker feeds |
-| `/admin/settings` | WiFi, contacts, timing settings |
+| Route | Access | Purpose |
+|-------|--------|---------|
+| `/` | Public | Lobby dashboard &mdash; the campus TV screen |
+| `/mobile` | Public | Mobile companion &mdash; scan QR to view |
+| `/trainer-sign-on` | Public | Trainer sign-on &mdash; room + break management |
+| `/admin` | Password | Admin login gate |
+| `/admin/rooms` | Password | Room allocation management |
+| `/admin/events` | Password | Event scheduling with icon picker |
+| `/admin/alerts` | Password | Scrolling banner alerts |
+| `/admin/carousel` | Password | Campus life photo carousel |
+| `/admin/trainers` | Password | Trainer profiles + photo upload |
+| `/admin/signon-log` | Password | Sign-on/sign-off audit history |
+| `/admin/rss` | Password | RSS news ticker feed management |
+| `/admin/settings` | Password | WiFi, contacts, reset time, carousel timing |
 
 ---
 
-## Firestore Collections
+## RSS News Feeds
 
-| Collection | Purpose |
-|---|---|
-| `rooms` | Current room allocations (resets daily) |
-| `events` | Scheduled events |
-| `announcements` | Active scrolling alerts |
-| `trainers` | Trainer profiles with photos |
-| `carousel` | Campus life carousel images |
-| `signOnLog` | Historical sign-on / sign-off log |
-| `rssFeeds` | RSS feed source library |
-| `settings/global` | Global config singleton |
+The lobby ticker aggregates headlines from **21 curated feeds** across 5 categories:
+
+| Category | Feeds | Examples |
+|----------|:-----:|---------|
+| **Cybersecurity** | 6 | The Hacker News, Krebs on Security, BleepingComputer, Dark Reading, CISA Alerts |
+| **Web Development** | 5 | Smashing Magazine, Dev.to, freeCodeCamp, CSS-Tricks, Web.dev |
+| **General Tech** | 5 | TechCrunch, Ars Technica, The Verge, Wired, Hacker News |
+| **Local (Perth/WA)** | 3 | ABC News Perth, PerthNow, WA Today |
+| **Safety & WHS** | 2 | Safe Work Australia, WorkSafe WA News |
+
+Feed management is handled through the admin panel &mdash; enable/disable individual feeds, add custom URLs, configure scroll speed and ribbon styling.
 
 ---
 
@@ -108,65 +378,83 @@ public/
 **Prerequisites:** Node.js 20+
 
 ```bash
+git clone https://github.com/thedalycreative/eqc-dashboard-by-25g.git
+cd eqc-dashboard-by-25g
 npm install
-npm run dev        # http://localhost:3000
+npm run dev        # http://localhost:5173
 ```
-
-The dev server uses Express + Vite middleware with hot reload. Firestore listeners connect to the live Firebase project -- be careful with destructive actions.
 
 ### Scripts
 
 | Script | What it does |
-|---|---|
-| `npm run dev` | Dev server with hot reload |
+|--------|-------------|
+| `npm run dev` | Start Vite dev server with hot reload |
 | `npm run build` | Production build to `dist/` |
-| `npm run lint` | TypeScript check (`tsc --noEmit`) |
-| `npm run clean` | Delete `dist/` |
+| `npm run lint` | TypeScript type check (`tsc --noEmit`) |
+| `npm run preview` | Preview production build locally |
 
----
-
-## Deploying
-
-Pushes to `main` auto-deploy to Vercel. Manual deploy:
-
-```bash
-npx vercel --prod --yes
-```
-
-Set environment variables in Vercel project settings:
+### Environment Variables
 
 | Variable | Required | Notes |
-|---|---|---|
-| `VITE_ADMIN_PASSWORD` | Recommended | Admin panel password. Falls back to `"asdf"` |
-| `VITE_FIREBASE_*` | No | Override baked-in Firebase config |
-
-### Firebase rules
-
-```bash
-firebase deploy --only firestore:rules
-```
+|----------|:--------:|-------|
+| `VITE_FIREBASE_API_KEY` | Yes | Firebase project API key |
+| `VITE_FIREBASE_AUTH_DOMAIN` | Yes | Firebase auth domain |
+| `VITE_FIREBASE_PROJECT_ID` | Yes | Firebase project ID |
+| `VITE_FIREBASE_STORAGE_BUCKET` | Yes | Firebase storage bucket |
+| `VITE_FIREBASE_MESSAGING_SENDER_ID` | Yes | Firebase messaging sender ID |
+| `VITE_FIREBASE_APP_ID` | Yes | Firebase app ID |
+| `VITE_ADMIN_PASSWORD` | Recommended | Admin panel password |
+| `VITE_DEMO_MODE` | Optional | Set to `"true"` for offline demo mode |
 
 ---
 
-## Links
+## Deployment
 
-| Where | URL |
-|---|---|
-| **Lobby** | [eqc-dashboard-by-25g.vercel.app](https://eqc-dashboard-by-25g.vercel.app) |
-| **Mobile** | [eqc-dashboard-by-25g.vercel.app/mobile](https://eqc-dashboard-by-25g.vercel.app/mobile) |
-| **Trainer sign-on** | [eqc-dashboard-by-25g.vercel.app/trainer-sign-on](https://eqc-dashboard-by-25g.vercel.app/trainer-sign-on) |
-| **Admin** | [eqc-dashboard-by-25g.vercel.app/admin](https://eqc-dashboard-by-25g.vercel.app/admin) |
-| **Repo** | [github.com/thedalycreative/eqc-dashboard-by-25g](https://github.com/thedalycreative/eqc-dashboard-by-25g) |
-| **Firebase** | [console.firebase.google.com/project/eqc-dashboard-by-25g](https://console.firebase.google.com/project/eqc-dashboard-by-25g) |
+The project auto-deploys to **Vercel** on every push to `main`.
+
+- **Production URL:** [www.perth-eqc.xyz](https://www.perth-eqc.xyz)
+- **Vercel URL:** [eqc-dashboard-by-25g.vercel.app](https://eqc-dashboard-by-25g.vercel.app)
+- **Deployment checks:** TypeScript type checking runs on every deploy
+- **Custom domain:** `perth-eqc.xyz` with `www` redirect, registered through Vercel
 
 ---
 
 ## Compliance
 
-This is the public-facing screen of a **Registered Training Organisation (RTO 45758, CRICOS 03952E)**. The footer displays campus address, phone, email, fire-assembly point, and first-aid location. Do not remove these -- they are a regulatory requirement.
+This dashboard runs in the lobby of a **Registered Training Organisation**. The footer displays legally required information:
+
+- **RTO 45758** &middot; **CRICOS 03952E**
+- Campus address: 2 Gordon St, West Perth WA 6005
+- Phone: 1800 338 883
+- Email: team@equinimcollege.com
+- Fire assembly point: Coolgardie St
+- First aid location: Kitchen
+
+These elements are regulatory requirements and must not be removed.
 
 ---
 
-## License
+## Links
 
-Internal project for EQC Institute / Equinim College. All trademarks and brand assets belong to their respective owners.
+| | URL |
+|---|---|
+| **Live Site** | [www.perth-eqc.xyz](https://www.perth-eqc.xyz) |
+| **Mobile View** | [www.perth-eqc.xyz/mobile](https://www.perth-eqc.xyz/mobile) |
+| **Trainer Sign-On** | [www.perth-eqc.xyz/trainer-sign-on](https://www.perth-eqc.xyz/trainer-sign-on) |
+| **Admin Panel** | [www.perth-eqc.xyz/admin](https://www.perth-eqc.xyz/admin) |
+| **GitHub Repo** | [github.com/thedalycreative/eqc-dashboard-by-25g](https://github.com/thedalycreative/eqc-dashboard-by-25g) |
+
+---
+
+<p align="center">
+  <img src="public/images/IMG_2634.PNG" alt="The Class of '87 - Intake 25G" width="600" />
+</p>
+
+<p align="center"><strong>The Class of '87</strong><br/><em>Some things never change. The hair does.</em></p>
+
+---
+
+<p align="center">
+  Built with genuine effort, questionable commit messages, and an unreasonable amount of Tailwind classes.<br/>
+  <strong>Intake 25G &middot; EQC Institute &middot; Perth Campus &middot; 2025</strong>
+</p>
