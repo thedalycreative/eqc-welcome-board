@@ -138,9 +138,7 @@ export default function Mobile() {
       <header className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-50 shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-eqc-green rounded-lg flex items-center justify-center shrink-0">
-              <BookOpen size={16} className="text-white" />
-            </div>
+            <img src="/images/eqc-sheild.png" alt="EQC Institute" className="w-8 h-8 object-contain shrink-0" />
             <div>
               <h1 className="font-bold text-base leading-none">EQC Perth</h1>
               <p className="text-[10px] text-gray-500">Campus companion</p>

@@ -84,9 +84,7 @@ const Header = () => {
   return (
     <header className="bg-white border-b border-gray-100 px-6 py-3 flex justify-between items-center shrink-0 shadow-sm">
       <div className="flex items-center gap-6">
-        <div className="w-14 h-14 bg-eqc-green rounded-xl flex items-center justify-center shrink-0">
-          <GraduationCap size={32} className="text-white" />
-        </div>
+        <img src="/images/eqc-sheild.png" alt="EQC Institute" className="w-14 h-14 object-contain shrink-0" />
         <div>
           <h1 className="text-2xl font-bold serif text-eqc-text tracking-tight leading-none">Welcome to Equinim College</h1>
           <p className="text-lg text-eqc-muted font-medium mt-1">Perth Campus</p>
@@ -635,9 +633,7 @@ const MobileRedirectModal = ({ onDismiss }: { onDismiss: () => void }) => {
           </svg>
         </a>
         <div className="p-6 sm:p-7 text-center">
-          <div className="mx-auto w-14 h-14 bg-eqc-green rounded-2xl flex items-center justify-center mb-4">
-            <GraduationCap size={28} className="text-white" />
-          </div>
+          <img src="/images/eqc-sheild.png" alt="EQC Institute" className="mx-auto w-14 h-14 object-contain mb-4" />
           <h2 className="text-xl font-bold text-eqc-text mb-2 leading-tight">
             Best viewed on desktop
           </h2>
