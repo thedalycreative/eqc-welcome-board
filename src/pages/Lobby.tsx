@@ -28,7 +28,6 @@ import { useRssTicker } from '../lib/rss';
 import { Rss } from 'lucide-react';
 
 const MOBILE_REDIRECT_DISMISSED_KEY = 'eqc-mobile-redirect-dismissed';
-const FLOORPLAN_VERSION = 'v5';
 
 const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
 const TRAINER_SIGN_ON_URL = `${import.meta.env.BASE_URL}trainer-sign-on.html`;
@@ -508,7 +507,7 @@ const FloorPlan = () => {
         <h2 className="text-lg font-display font-bold">Campus Map</h2>
       </div>
       <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative flex items-center justify-center">
-        <img src={`/images/eqc-campus-layout.png?${FLOORPLAN_VERSION}`} alt="Campus Floor Plan" className="w-full h-full object-cover animate-float" referrerPolicy="no-referrer" />
+        <img src="/images/eqc-campus-layout.svg" alt="Campus Floor Plan" className="w-full h-full object-cover animate-float" referrerPolicy="no-referrer" />
         <style>{`
           @keyframes float {
             0%, 100% { transform: translateY(0); }
