@@ -304,11 +304,14 @@ const Forecast7Widget = () => {
     const a = document.createElement('a');
     a.className = 'weatherwidget-io';
     a.href = 'https://forecast7.com/en/n31d95115d86/perth/';
-    a.setAttribute('data-label_1', '');
+    a.setAttribute('data-label_1', 'PERTH');
     a.setAttribute('data-label_2', '');
     a.setAttribute('data-theme', 'pure');
-    a.setAttribute('data-days', '3');
+    a.setAttribute('data-days', '1');
+    a.setAttribute('data-icontype', 'climacons_animated');
     a.setAttribute('data-highcolor', '#1a7a54');
+    a.setAttribute('data-textcolor', '#0f172a');
+    a.setAttribute('data-basecolor', '#ffffff');
     a.textContent = 'PERTH Weather';
     ref.current.appendChild(a);
     const existing = document.getElementById('weatherwidget-io-js');
@@ -318,7 +321,7 @@ const Forecast7Widget = () => {
     script.src = 'https://weatherwidget.io/js/widget.min.js';
     document.body.appendChild(script);
   }, []);
-  return <div ref={ref} className="overflow-hidden rounded-xl h-14 w-[min(320px,25vw)] shrink-0" />;
+  return <div ref={ref} className="rounded-xl h-14 w-[min(220px,18vw)] shrink-0 bg-gray-50 border border-gray-100 overflow-hidden" />;
 };
 
 // --- Campus Map ---

@@ -2,23 +2,58 @@ import React, { useState, useEffect, useMemo } from 'react';
 import {
   MapPin, Phone, Mail, Flame, BriefcaseMedical, Coffee, BookOpen,
   Calendar, Wifi, Copy, Check, Rss, ExternalLink, ChevronDown,
-  ChevronUp, Home, ClipboardCheck, Map,
+  ChevronUp, Home, Map,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import toast, { Toaster } from 'react-hot-toast';
-import type { RoomAllocation } from '../lib/types';
-import { getTrainerImagePath } from '../lib/trainers';
-import { useRooms, useEvents, useAnnouncements, useGlobalSettings } from '../lib/hooks';
+import type { RoomAllocation, Trainer } from '../lib/types';
+import { useRooms, useEvents, useAnnouncements, useGlobalSettings, useTrainers } from '../lib/hooks';
 import { useRssTicker } from '../lib/rss';
 
 const CAMPUS_MAP_URL = 'https://maps.google.com/maps?q=2+Gordon+St+West+Perth+WA+6005&t=&z=16&ie=UTF8&iwloc=&output=embed';
 
-const MobileRoomCard: React.FC<{ room: RoomAllocation }> = ({ room }) => {
+function getInitials(name?: string): string {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return parts.length >= 2
+    ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+    : parts[0].slice(0, 2).toUpperCase();
+}
+
+const TrainerAvatar: React.FC<{ name?: string; photoUrl?: string; tone: 'live' | 'break' | 'inactive' }> = ({ name, photoUrl, tone }) => {
+  const [failed, setFailed] = useState(false);
+  const showImage = photoUrl && !failed;
+  const ring =
+    tone === 'live' ? 'bg-white/20 border-white/40' :
+    tone === 'break' ? 'bg-white/20 border-white/40' :
+    'bg-gray-100 border-gray-300';
+  return (
+    <div className={`w-7 h-7 rounded-full overflow-hidden border shrink-0 flex items-center justify-center ${ring}`}>
+      {showImage ? (
+        <img
+          src={photoUrl}
+          alt={name || ''}
+          className="w-full h-full object-cover object-top"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="text-[9px] font-bold tracking-wide">{getInitials(name)}</span>
+      )}
+    </div>
+  );
+};
+
+const MobileRoomCard: React.FC<{ room: RoomAllocation; trainers: Trainer[] }> = ({ room, trainers }) => {
   const isLive = room.status === 'live';
   const isBreak = room.status === 'break';
   const isInactive = room.status === 'inactive';
   const num = parseInt(room.roomName.replace('Room ', ''));
   const label = !isNaN(num) ? `R${num}` : room.roomName;
+
+  const matchedTrainer = useMemo(
+    () => trainers.find(t => t.name.toLowerCase() === (room.trainer || '').toLowerCase()),
+    [trainers, room.trainer]
+  );
 
   if (!isLive && !isBreak && !isInactive) {
     return (
@@ -29,6 +64,8 @@ const MobileRoomCard: React.FC<{ room: RoomAllocation }> = ({ room }) => {
     );
   }
 
+  const tone: 'live' | 'break' | 'inactive' = isLive ? 'live' : isBreak ? 'break' : 'inactive';
+
   return (
     <div className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border ${
       isLive ? 'bg-eqc-green text-white border-eqc-green' :
@@ -36,9 +73,7 @@ const MobileRoomCard: React.FC<{ room: RoomAllocation }> = ({ room }) => {
       'bg-gray-200 text-gray-500 border-gray-200'
     }`}>
       <span className="text-xs font-bold w-8 shrink-0">{label}</span>
-      <div className="w-7 h-7 rounded-full overflow-hidden bg-white/20 border border-white/30 shrink-0">
-        <img src={getTrainerImagePath(room.trainer)} alt={room.trainer || ''} className="w-full h-full object-cover object-top" />
-      </div>
+      <TrainerAvatar name={room.trainer} photoUrl={matchedTrainer?.photoUrl} tone={tone} />
       <div className="flex-1 min-w-0">
         <p className="text-xs font-bold truncate">{room.trainer}{room.intake ? ` · ${room.intake}` : ''}</p>
         {room.course && <p className="text-[10px] opacity-80 truncate">{room.course}</p>}
@@ -118,6 +153,7 @@ export default function Mobile() {
   const [events] = useEvents();
   const announcements = useAnnouncements();
   const [settings] = useGlobalSettings();
+  const trainers = useTrainers();
   const [now, setNow] = useState(new Date());
 
   useEffect(() => { const id = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(id); }, []);
@@ -186,7 +222,7 @@ export default function Mobile() {
         <section>
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mb-2 px-1">Rooms</h2>
           <div className="space-y-1.5">
-            {rooms.map(room => <MobileRoomCard key={room.id} room={room} />)}
+            {rooms.map(room => <MobileRoomCard key={room.id} room={room} trainers={trainers} />)}
           </div>
         </section>
 
@@ -241,10 +277,6 @@ export default function Mobile() {
         <a href="/" className="flex flex-col items-center gap-0.5 px-4 py-1 text-gray-500 hover:text-eqc-green">
           <Home size={20} />
           <span className="text-[9px] font-bold">Lobby</span>
-        </a>
-        <a href="/trainer-sign-on" className="flex flex-col items-center gap-0.5 px-4 py-1 text-gray-500 hover:text-eqc-green">
-          <ClipboardCheck size={20} />
-          <span className="text-[9px] font-bold">Sign On</span>
         </a>
         <a href="https://maps.google.com/?q=2+Gordon+St+West+Perth+WA+6005" target="_blank" rel="noreferrer" className="flex flex-col items-center gap-0.5 px-4 py-1 text-gray-500 hover:text-eqc-green">
           <Map size={20} />
