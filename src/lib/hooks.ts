@@ -191,6 +191,29 @@ export function useResetCountdown(resetHour: number = 22) {
 }
 
 /**
+ * Writes a reset entry to the signOnLog collection so admins can see when
+ * (and by what) the dashboard was wiped. Source distinguishes auto vs manual.
+ */
+export async function writeResetLog(source: 'auto' | 'manual', roomsAffected: number) {
+  try {
+    const id = `log_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    await setDoc(doc(db, 'signOnLog', id), {
+      id,
+      trainerName: source === 'auto' ? 'System (auto-reset)' : 'Admin (manual reset)',
+      roomNumber: 'All',
+      intakeNumber: '—',
+      course: source === 'auto'
+        ? `Daily reset — ${roomsAffected} room${roomsAffected === 1 ? '' : 's'} cleared`
+        : `Manual reset — ${roomsAffected} room${roomsAffected === 1 ? '' : 's'} cleared`,
+      action: 'reset',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Failed to write reset log:', err);
+  }
+}
+
+/**
  * Automatically resets all rooms to "available" once the daily reset hour is reached.
  * Checks every 30 seconds; uses localStorage to prevent duplicate resets on the same day.
  * Also catches up on missed resets when the page loads on a new day.
@@ -225,6 +248,7 @@ export function useAutoReset(resetHour: number) {
           status: 'available',
         });
       }
+      await writeResetLog('auto', snapshot.size);
       localStorage.setItem('eqc-last-reset-date', today);
     };
 

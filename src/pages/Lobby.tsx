@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Clock,
@@ -103,7 +103,6 @@ const Header = () => {
         )}
       </div>
       <div className="flex items-center gap-3 text-right shrink min-w-0">
-        <Forecast7Widget />
         <div className="flex items-center gap-3 bg-gray-50 px-4 h-14 rounded-xl border border-gray-100 shrink-0">
           <span className="text-sm font-bold text-eqc-muted tracking-tight whitespace-nowrap">{formattedDate}</span>
           <div className="w-px h-8 bg-gray-300" />
@@ -292,33 +291,6 @@ const EventList = ({ events }: { events: Event[] }) => {
       </div>
     </div>
   );
-};
-
-// --- Weather Widget ---
-
-const Forecast7Widget = () => {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!ref.current) return;
-    while (ref.current.firstChild) ref.current.removeChild(ref.current.firstChild);
-    const a = document.createElement('a');
-    a.className = 'weatherwidget-io';
-    a.href = 'https://forecast7.com/en/n31d95115d86/perth/';
-    a.setAttribute('data-label_1', '');
-    a.setAttribute('data-label_2', '');
-    a.setAttribute('data-theme', 'pure');
-    a.setAttribute('data-days', '3');
-    a.setAttribute('data-highcolor', '#1a7a54');
-    a.textContent = 'PERTH Weather';
-    ref.current.appendChild(a);
-    const existing = document.getElementById('weatherwidget-io-js');
-    if (existing) existing.remove();
-    const script = document.createElement('script');
-    script.id = 'weatherwidget-io-js';
-    script.src = 'https://weatherwidget.io/js/widget.min.js';
-    document.body.appendChild(script);
-  }, []);
-  return <div ref={ref} className="overflow-hidden rounded-xl h-14 w-[min(320px,25vw)] shrink-0" />;
 };
 
 // --- Campus Map ---

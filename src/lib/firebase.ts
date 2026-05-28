@@ -19,4 +19,4 @@ export const db = initializeFirestore(app, {
 });
 export const storage = getStorage(app);
 
-export const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "asdf";
+export const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "Trainer";

@@ -8,7 +8,7 @@ export default function AdminSignOnLog() {
   const entries = useSignOnLog();
   const [filter, setFilter] = useState('');
   const [page, setPage] = useState(0);
-  const [actionFilter, setActionFilter] = useState<'all' | 'sign-on' | 'sign-off'>('all');
+  const [actionFilter, setActionFilter] = useState<'all' | 'sign-on' | 'sign-off' | 'reset'>('all');
 
   const filtered = useMemo(() => {
     const q = filter.toLowerCase().trim();
@@ -34,7 +34,7 @@ export default function AdminSignOnLog() {
           <ClipboardList size={26} className="text-eqc-green" />
           Sign-On Log
         </h2>
-        <p className="text-sm text-eqc-muted mt-1">Historical record of trainer sign-ons and sign-offs. Break events are not recorded.</p>
+        <p className="text-sm text-eqc-muted mt-1">Historical record of trainer sign-ons, sign-offs, and dashboard resets. Break events are not recorded.</p>
       </div>
 
       <div className="flex flex-wrap gap-3 items-center">
@@ -51,6 +51,7 @@ export default function AdminSignOnLog() {
           <option value="all">All actions</option>
           <option value="sign-on">Sign-on only</option>
           <option value="sign-off">Sign-off only</option>
+          <option value="reset">Resets only</option>
         </select>
         <span className="text-xs text-eqc-muted">
           {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'}
@@ -82,7 +83,11 @@ export default function AdminSignOnLog() {
               <span className="text-eqc-muted">{entry.roomNumber}</span>
               <span className="text-eqc-muted">{entry.intakeNumber}</span>
               <span className="truncate text-xs">{entry.course}</span>
-              <span className={`text-right text-[10px] font-black uppercase tracking-widest ${entry.action === 'sign-on' ? 'text-green-700' : 'text-orange-700'}`}>
+              <span className={`text-right text-[10px] font-black uppercase tracking-widest ${
+                entry.action === 'sign-on' ? 'text-green-700' :
+                entry.action === 'sign-off' ? 'text-orange-700' :
+                'text-purple-700'
+              }`}>
                 {entry.action}
               </span>
             </div>
