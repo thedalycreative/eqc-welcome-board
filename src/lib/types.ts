@@ -65,7 +65,7 @@ export interface SignOnLogEntry {
   roomNumber: string;
   intakeNumber: string;
   course: string;
-  action: 'sign-on' | 'sign-off';
+  action: 'sign-on' | 'sign-off' | 'reset';
   timestamp: string;
 }
 

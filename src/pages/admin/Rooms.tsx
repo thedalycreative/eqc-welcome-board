@@ -3,7 +3,7 @@ import { Layout, Plus, X, Trash2, ExternalLink, CheckCircle, AlertCircle, Coffee
 import { motion, AnimatePresence } from 'motion/react';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { useRooms, useTrainers } from '../../lib/hooks';
+import { useRooms, useTrainers, writeResetLog } from '../../lib/hooks';
 import type { RoomAllocation } from '../../lib/types';
 
 const TRAINER_SIGN_ON_URL = `${import.meta.env.BASE_URL}trainer-sign-on.html`;
@@ -148,6 +148,7 @@ export default function AdminRooms() {
   const handleResetAll = async () => {
     const reset = rooms.map(r => ({ ...r, status: 'available' as const, course: undefined, trainer: undefined, intake: undefined, topic: undefined, breakUntil: undefined }));
     await persist(reset);
+    await writeResetLog('manual', reset.length);
     setDraftRooms(reset);
     setDirty(false);
     setStatusMessage({ text: 'All rooms reset to available.', type: 'success' });
