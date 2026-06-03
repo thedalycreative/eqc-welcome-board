@@ -9,22 +9,27 @@ import {
   ClipboardList,
   Rss,
   Settings as SettingsIcon,
-  Cog,
   LogOut,
   LogIn,
   ShieldQuestionIcon,
   X,
   Home,
   ExternalLink,
+  Smartphone,
 } from 'lucide-react';
 import { motion } from 'motion/react';
-import { QRCodeSVG } from 'qrcode.react';
 
 import { ADMIN_PASSWORD } from '../lib/firebase';
-import { useGlobalSettings, useResetCountdown } from '../lib/hooks';
+import { useGlobalSettings, useResetCountdown, useTrainers } from '../lib/hooks';
+import { findTrainerByPassword } from '../lib/trainerPasswords';
 
 const TRAINER_SIGN_ON_URL = `${import.meta.env.BASE_URL}trainer-sign-on.html`;
+const MOBILE_URL = `${import.meta.env.BASE_URL}mobile`;
 const STORAGE_KEY = 'eqc-admin-auth';
+const ACTOR_KEY = 'eqc-admin-actor';
+
+// Universal admin passwords accepted alongside the env-configured one.
+const UNIVERSAL_ADMIN_PASSWORDS = ['Admin', 'asdf'];
 
 const NAV_TABS = [
   { path: '/admin/rooms', label: 'Rooms', icon: Layout },
@@ -39,18 +44,38 @@ const NAV_TABS = [
 
 function LoginGate({ onSuccess }: { onSuccess: () => void }) {
   const navigate = useNavigate();
+  const trainers = useTrainers();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = (e: FormEvent) => {
     e.preventDefault();
-    if (password === ADMIN_PASSWORD) {
+    const trimmed = password;
+    const isAdmin =
+      trimmed === ADMIN_PASSWORD ||
+      UNIVERSAL_ADMIN_PASSWORDS.includes(trimmed);
+
+    if (isAdmin) {
       sessionStorage.setItem(STORAGE_KEY, 'ok');
+      sessionStorage.setItem(ACTOR_KEY, JSON.stringify({ kind: 'admin' }));
       setError('');
       onSuccess();
-    } else {
-      setError('Invalid password. Please try again.');
+      return;
     }
+
+    const trainerMatch = findTrainerByPassword(trainers, trimmed);
+    if (trainerMatch) {
+      sessionStorage.setItem(STORAGE_KEY, 'ok');
+      sessionStorage.setItem(
+        ACTOR_KEY,
+        JSON.stringify({ kind: 'trainer', trainerId: trainerMatch.id, name: trainerMatch.name })
+      );
+      setError('');
+      onSuccess();
+      return;
+    }
+
+    setError('Invalid password. Please try again.');
   };
 
   return (
@@ -66,7 +91,7 @@ function LoginGate({ onSuccess }: { onSuccess: () => void }) {
           </button>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-4 text-left mb-8">
+        <form onSubmit={handleLogin} className="space-y-4 text-left">
           {error && (
             <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-bold border border-red-100 animate-shake">
               {error}
@@ -79,38 +104,20 @@ function LoginGate({ onSuccess }: { onSuccess: () => void }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoFocus
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               className="w-full px-4 py-3 min-h-[48px] text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-eqc-green outline-none transition-shadow"
-              placeholder="Enter admin password"
+              placeholder="Enter your password"
             />
+            <p className="text-xs text-gray-400 mt-2">
+              Admins use the universal password. Trainers use the personal password from the Trainers tab.
+            </p>
           </div>
           <button type="submit" className="w-full bg-eqc-green text-white py-3 min-h-[48px] rounded-xl font-bold hover:bg-eqc-green/90 transition-colors flex items-center justify-center gap-2">
             <LogIn size={20} /> Login
           </button>
         </form>
-
-        <div className="bg-gray-50 rounded-2xl p-5 border border-gray-100 text-center relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-1 h-full bg-eqc-green" />
-          <h3 className="text-sm font-bold text-gray-800 mb-2">Trainer looking to sign on?</h3>
-          <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-            If you are a trainer checking in for your class, please use the Trainer Sign-On Portal instead of logging in here.
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <div className="bg-white p-2 rounded-xl border border-gray-100 shadow-sm shrink-0">
-              <QRCodeSVG value={typeof window !== 'undefined' ? `${window.location.origin}${TRAINER_SIGN_ON_URL}` : TRAINER_SIGN_ON_URL} size={64} />
-            </div>
-            <div className="text-left flex flex-col items-start">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Scan or Click</span>
-              <a
-                href={TRAINER_SIGN_ON_URL}
-                target="_blank"
-                className="bg-white border border-gray-200 text-eqc-green text-xs font-bold py-2 px-4 rounded-lg hover:bg-gray-50 transition-colors inline-flex items-center gap-2"
-                rel="noreferrer"
-              >
-                Open Portal <ExternalLink size={14} />
-              </a>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -158,6 +165,7 @@ export default function Admin() {
 
   const signOut = () => {
     sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(ACTOR_KEY);
     navigate('/');
   };
 
@@ -175,27 +183,50 @@ export default function Admin() {
             <HamburgerIcon />
           </button>
           <div className="flex items-center gap-3 min-w-0">
-            <Cog size={28} className="text-eqc-green shrink-0 hidden sm:block" />
-            <h1 className="text-lg sm:text-xl font-bold serif text-gray-800 truncate">Administration</h1>
+            <img src="/images/eqc-sheild.png" alt="EQC Institute" className="w-8 h-8 sm:w-9 sm:h-9 object-contain shrink-0" />
+            <h1 className="text-base sm:text-lg lg:text-xl font-bold serif text-gray-800 truncate">Perth Dashboard Admin Panel</h1>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-6">
-          <div className="hidden sm:flex flex-col items-end">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Resets in</span>
-            <span className="font-timer text-2xl font-bold tabular-nums text-eqc-green leading-none">{countdown}</span>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="hidden lg:flex flex-col items-end mr-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Resets in (WA)</span>
+            <span className="font-timer text-xl xl:text-2xl font-bold tabular-nums text-eqc-green leading-none">{countdown}</span>
           </div>
 
+          {/* View Campus Dashboard (primary green) */}
           <button
             onClick={() => navigate('/')}
-            className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+            className="hidden md:flex items-center gap-2 px-3 lg:px-4 py-2 text-xs lg:text-sm font-bold text-white bg-eqc-green hover:bg-eqc-green/90 rounded-lg transition-colors"
+            data-allow-dirty="true"
           >
-            <Home size={16} /> Lobby
+            <Home size={16} /> <span className="hidden lg:inline">View Campus Dashboard</span><span className="lg:hidden">Dashboard</span>
           </button>
+
+          {/* Mobile-friendly Dashboard (secondary) */}
+          <a
+            href={MOBILE_URL}
+            className="hidden md:flex items-center gap-2 px-3 lg:px-4 py-2 text-xs lg:text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            data-allow-dirty="true"
+          >
+            <Smartphone size={16} /> <span className="hidden xl:inline">Mobile-friendly Dashboard</span><span className="xl:hidden">Mobile</span>
+          </a>
+
+          {/* Trainer Sign-on (secondary) */}
+          <a
+            href={TRAINER_SIGN_ON_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden md:flex items-center gap-2 px-3 lg:px-4 py-2 text-xs lg:text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+            data-allow-dirty="true"
+          >
+            <ExternalLink size={16} /> <span className="hidden xl:inline">Trainer Sign-on</span><span className="xl:hidden">Sign-on</span>
+          </a>
 
           <button
             onClick={signOut}
             className="flex items-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors min-h-[44px]"
+            data-allow-dirty="true"
           >
             <LogOut size={16} /> <span className="hidden sm:inline">Sign Out</span>
           </button>
@@ -238,7 +269,7 @@ export default function Admin() {
 
           {/* Mobile-only countdown chip */}
           <div className="md:hidden mb-2 px-3 py-2 bg-gray-50 rounded-lg flex items-center justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Resets in</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Resets in (WA)</span>
             <span className="font-timer text-base font-bold tabular-nums text-eqc-green leading-none">{countdown}</span>
           </div>
 
@@ -260,17 +291,26 @@ export default function Admin() {
           <div className="mt-auto pt-3 border-t border-gray-100 flex flex-col gap-1">
             <button
               onClick={() => navigate('/')}
-              className="md:hidden flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-100 transition-colors min-h-[44px]"
+              className="md:hidden flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-bold text-white bg-eqc-green hover:bg-eqc-green/90 transition-colors min-h-[44px]"
+              data-allow-dirty="true"
             >
-              <Home size={14} /> Back to Lobby
+              <Home size={14} /> View Campus Dashboard
             </button>
+            <a
+              href={MOBILE_URL}
+              className="md:hidden flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors min-h-[44px]"
+              data-allow-dirty="true"
+            >
+              <Smartphone size={14} /> Mobile-friendly Dashboard
+            </a>
             <a
               href={TRAINER_SIGN_ON_URL}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-2 px-3 py-3 md:py-2.5 rounded-lg text-xs font-bold text-eqc-green hover:bg-eqc-green/5 transition-colors min-h-[44px]"
+              className="md:hidden flex items-center gap-2 px-3 py-3 rounded-lg text-xs font-bold text-eqc-green hover:bg-eqc-green/5 transition-colors min-h-[44px]"
+              data-allow-dirty="true"
             >
-              <ExternalLink size={14} /> Sign-On Portal
+              <ExternalLink size={14} /> Trainer Sign-on
             </a>
           </div>
         </nav>

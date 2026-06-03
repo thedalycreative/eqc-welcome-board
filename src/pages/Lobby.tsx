@@ -1,44 +1,38 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Clock,
   MapPin,
-  Phone,
-  Mail,
-  Flame,
-  BriefcaseMedical,
-  BookOpen,
   Maximize,
   Minimize,
   Coffee,
   Train,
   CalendarDaysIcon,
   MapPinCheckInside,
-  Shield,
-  GraduationCap,
   Wifi,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
 
-import type { RoomAllocation, Event, Announcement, Trainer } from '../lib/types';
+import type { RoomAllocation, Event, Announcement, Trainer, FooterItem, NearbyPlace } from '../lib/types';
+import { DEFAULT_FOOTER_ITEMS, DEFAULT_NEARBY_PLACES } from '../lib/types';
 import { getTrainerImagePath } from '../lib/trainers';
 import { useRooms, useEvents, useAnnouncements, useCarousel, useGlobalSettings, useAutoReset, useTrainers } from '../lib/hooks';
 import { useRssTicker } from '../lib/rss';
 import { Rss } from 'lucide-react';
+import { getLucideIcon, EventIcon } from '../lib/eventIcons';
+import { getReadableTextColor, getAccentTextColor } from '../lib/colors';
 
 const MOBILE_REDIRECT_DISMISSED_KEY = 'eqc-mobile-redirect-dismissed';
 
 const IS_DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
-const TRAINER_SIGN_ON_URL = `${import.meta.env.BASE_URL}trainer-sign-on.html`;
 
 const INITIAL_ROOMS: RoomAllocation[] = IS_DEMO_MODE
   ? [
-      { id: 1, roomName: 'Room 1', status: 'live', course: 'ICT40120 - Cert IV in Cyber Security', trainer: 'Tim', intake: '25g', topic: 'Network Defence' },
-      { id: 2, roomName: 'Room 2', status: 'live', course: 'ICT50220 - Dip of IT', trainer: 'Saxon', intake: '26b', topic: 'Cloud Architecture' },
-      { id: 3, roomName: 'Room 3', status: 'break', course: 'ICT40120 - Cert IV in Cyber Security', trainer: 'Sarah', intake: '25f', topic: 'Ethical Hacking', breakUntil: new Date(Date.now() + 15 * 60000).toISOString() },
-      { id: 4, roomName: 'Room 4', status: 'live', course: 'BSB50120 - Dip of Business', trainer: 'Emma', intake: '25g', topic: 'Service Excellence' },
-      { id: 5, roomName: 'Room 5', status: 'live', course: 'ICT30120 - Cert III in IT', trainer: 'Nobody Special', intake: '26a', topic: 'Intro to Programming' },
+      { id: 1, roomName: 'Room 1', status: 'live', course: 'ICT40120 - Cert IV in Cyber Security', trainer: 'Tim', intake: '25.G', topic: 'Network Defence' },
+      { id: 2, roomName: 'Room 2', status: 'live', course: 'ICT50220 - Dip of IT', trainer: 'Saxon', intake: '26.B', topic: 'Cloud Architecture' },
+      { id: 3, roomName: 'Room 3', status: 'break', course: 'ICT40120 - Cert IV in Cyber Security', trainer: 'Sarah', intake: '25.F', topic: 'Ethical Hacking', breakUntil: new Date(Date.now() + 15 * 60000).toISOString() },
+      { id: 4, roomName: 'Room 4', status: 'live', course: 'BSB50120 - Dip of Business', trainer: 'Emma', intake: '25.G', topic: 'Service Excellence' },
+      { id: 5, roomName: 'Room 5', status: 'live', course: 'ICT30120 - Cert III in IT', trainer: 'Nobody Special', intake: '26.A', topic: 'Intro to Programming' },
       { id: 6, roomName: 'Room 6', status: 'available' },
     ]
   : [
@@ -51,10 +45,27 @@ const INITIAL_ROOMS: RoomAllocation[] = IS_DEMO_MODE
     ];
 
 const DEMO_EVENTS: Event[] = [
-  { id: 1, title: 'Term 2 Starts', date: '2026-04-20', description: 'Welcome back — new term, new opportunities ahead.' },
-  { id: 2, title: 'Campus Tour', date: '2026-04-01', description: 'Join us for a guided tour of our state-of-the-art facilities.' },
-  { id: 3, title: 'Student Workshop', date: '2026-04-10', description: 'A deep dive into professional development and networking.' },
+  { id: 1, title: 'Term 2 Starts', date: '2026-04-20', description: 'Welcome back — new term, new opportunities ahead.', icon: 'GraduationCap' },
+  { id: 2, title: 'Campus Tour', date: '2026-04-01', description: 'Join us for a guided tour of our state-of-the-art facilities.', icon: 'Users' },
+  { id: 3, title: 'Student Workshop', date: '2026-04-10', description: 'A deep dive into professional development and networking.', icon: 'Lightbulb' },
 ];
+
+// --- Helpers ---
+
+function formatRoomDisplayName(roomName: string): string {
+  // Convert "Room 1" → "Classroom 1" on the lobby; leave anything else as-is.
+  const m = roomName.match(/^Room\s+(\d+)$/i);
+  return m ? `Classroom ${m[1]}` : roomName;
+}
+
+function formatBreakRemaining(breakUntil?: string): string | null {
+  if (!breakUntil) return null;
+  const target = new Date(breakUntil).getTime();
+  const ms = target - Date.now();
+  if (ms <= 0) return null;
+  const minutes = Math.ceil(ms / 60000);
+  return minutes === 1 ? '1 min' : `${minutes} min`;
+}
 
 // --- Header ---
 
@@ -118,19 +129,11 @@ const Header = () => {
 
 // --- Room Item ---
 
-function formatBreakRemaining(breakUntil?: string): string | null {
-  if (!breakUntil) return null;
-  const target = new Date(breakUntil).getTime();
-  const ms = target - Date.now();
-  if (ms <= 0) return null;
-  const minutes = Math.ceil(ms / 60000);
-  return minutes === 1 ? '1 min' : `${minutes} min`;
-}
-
 const RoomItem: React.FC<{ room: RoomAllocation; trainers: Trainer[] }> = ({ room, trainers }) => {
   const isLive = room.status === 'live';
   const isBreak = room.status === 'break';
   const isInactive = room.status === 'inactive';
+  const isAvailable = room.status === 'available';
   const hasContent = isLive || isBreak || isInactive;
   const matchedTrainer = useMemo(
     () => trainers.find(t => t.name.toLowerCase() === (room.trainer || '').toLowerCase()),
@@ -146,36 +149,53 @@ const RoomItem: React.FC<{ room: RoomAllocation; trainers: Trainer[] }> = ({ roo
   }, [isBreak]);
 
   const breakRemaining = isBreak ? formatBreakRemaining(room.breakUntil) : null;
+  const displayName = formatRoomDisplayName(room.roomName);
+
+  // Tile background: live → WHITE w/ green accents, available → LIGHT GREEN, break → orange, inactive → grey.
+  const tileClass = isLive
+    ? 'bg-white text-eqc-text border border-eqc-green/40 shadow-xl ring-1 ring-eqc-green/20'
+    : isBreak
+      ? 'bg-orange-500 text-white shadow-lg'
+      : isInactive
+        ? 'bg-gray-200 text-gray-500 shadow-sm'
+        : 'bg-green-50 text-green-700 border border-green-200 shadow-sm';
+
+  const numberPillClass = isLive
+    ? 'bg-eqc-green/10 text-eqc-green'
+    : isBreak
+      ? 'bg-white/20 text-white'
+      : isInactive
+        ? 'bg-gray-100 text-gray-500'
+        : 'bg-white text-green-700';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`
-        flex flex-row items-center justify-between px-5 py-3 rounded-2xl transition-all cursor-default flex-1
-        ${isLive ? 'bg-eqc-green text-white shadow-xl' : isBreak ? 'bg-orange-500 text-white shadow-lg' : isInactive ? 'bg-gray-300 text-gray-500 shadow-sm' : 'bg-white border border-gray-100 shadow-sm'}
-      `}
+      className={`flex flex-row items-center justify-between px-5 py-3 rounded-2xl transition-all cursor-default flex-1 ${tileClass}`}
     >
       <div className="flex flex-row items-center gap-3">
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
-          isLive ? 'bg-white/20' : isBreak ? 'bg-white/20' : isInactive ? 'bg-gray-200' : 'bg-gray-100'
-        }`}>
-          <span className="font-sans font-bold text-xl leading-[0] translate-y-px">{room.roomName.replace('Room ', '')}</span>
+        <div className={`min-w-[10rem] h-12 rounded-full flex items-center justify-center shrink-0 px-4 ${numberPillClass}`}>
+          <span className="font-sans font-bold text-lg leading-[0] translate-y-px whitespace-nowrap">{displayName}</span>
         </div>
         {hasContent && room.trainer ? (
           <>
-            <div className={`w-[3.5rem] h-[3.5rem] rounded-full overflow-hidden border-[3px] shrink-0 bg-white ${isInactive ? 'border-gray-200' : 'border-white/40'}`}>
+            <div className={`w-[3.5rem] h-[3.5rem] rounded-full overflow-hidden border-[3px] shrink-0 bg-white ${
+              isLive ? 'border-eqc-green/40' : isInactive ? 'border-gray-300' : 'border-white/40'
+            }`}>
               <img src={trainerImg} alt={room.trainer} className="w-full h-full object-cover object-top" />
             </div>
-            <span className="font-sans font-bold text-3xl leading-none">{room.trainer}</span>
+            <span className={`font-sans font-bold text-3xl leading-none ${isLive ? 'text-eqc-text' : ''}`}>{room.trainer}</span>
           </>
         ) : isBreak ? (
           <>
             <Coffee size={24} />
             <span className="font-sans font-semibold text-xl leading-none italic">On Break</span>
           </>
+        ) : isAvailable ? (
+          <span className="font-sans text-base leading-none italic">Available for study</span>
         ) : (
-          <span className="font-sans text-base leading-none italic opacity-80">Available for study</span>
+          <span className="font-sans text-base leading-none italic opacity-80">—</span>
         )}
       </div>
 
@@ -183,24 +203,30 @@ const RoomItem: React.FC<{ room: RoomAllocation; trainers: Trainer[] }> = ({ roo
         {hasContent && (room.course || room.topic) && (
           <div className="flex flex-col items-end gap-0.5 text-right">
             {room.course && (
-              <span className={`font-sans text-[10px] font-bold uppercase tracking-widest truncate max-w-[260px] ${isLive || isBreak ? 'text-white/70' : isInactive ? 'text-gray-400' : 'text-eqc-muted'}`}>
+              <span className={`font-sans text-[10px] font-bold uppercase tracking-widest truncate max-w-[260px] ${
+                isLive ? 'text-eqc-muted' : isBreak ? 'text-white/70' : isInactive ? 'text-gray-400' : 'text-eqc-muted'
+              }`}>
                 {room.course}
               </span>
             )}
             {room.topic && (
-              <span className={`font-sans text-xs font-bold truncate max-w-[260px] ${isLive || isBreak ? 'text-white/90' : isInactive ? 'text-gray-500' : 'text-eqc-text'}`}>
+              <span className={`font-sans text-xs font-bold truncate max-w-[260px] ${
+                isLive ? 'text-eqc-text' : isBreak ? 'text-white/90' : isInactive ? 'text-gray-500' : 'text-eqc-text'
+              }`}>
                 {room.topic}
               </span>
             )}
           </div>
         )}
         {hasContent && room.intake && (
-          <span className={`font-sans font-black text-5xl leading-none uppercase tracking-tight ${isLive || isBreak ? 'text-white' : isInactive ? 'text-gray-500' : 'text-eqc-text'}`}>
+          <span className={`font-sans font-black text-5xl leading-none uppercase tracking-tight ${
+            isLive ? 'text-eqc-green' : isBreak ? 'text-white' : isInactive ? 'text-gray-500' : 'text-eqc-text'
+          }`}>
             {room.intake}
           </span>
         )}
         {isLive && (
-          <div className="flex items-center gap-1.5 bg-white/20 px-3 py-1.5 rounded-full border border-white/30 shrink-0">
+          <div className="flex items-center gap-1.5 bg-eqc-green text-white px-3 py-1.5 rounded-full border border-eqc-green/30 shrink-0">
             <div className="w-2 h-2 bg-white rounded-full animate-ping" />
             <span className="text-xs font-black tracking-widest uppercase">LIVE</span>
           </div>
@@ -273,13 +299,19 @@ const EventList = ({ events }: { events: Event[] }) => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.4 }}
-              className="border-l-3 border-eqc-green pl-3"
+              className="flex items-start gap-2.5 border-l-3 border-eqc-green pl-3"
             >
-              <p className="text-[9px] font-black text-eqc-green uppercase tracking-widest mb-1">
-                {new Date(currentEvent.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
-              </p>
-              <h3 className="text-sm font-display font-bold text-eqc-text leading-tight mb-0.5">{currentEvent.title}</h3>
-              <p className="text-[11px] text-eqc-muted leading-snug line-clamp-2">{currentEvent.description}</p>
+              <div className="w-9 h-9 rounded-lg bg-green-50 flex items-center justify-center shrink-0 mt-0.5 text-eqc-green">
+                <EventIcon name={currentEvent.icon} size={18} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[9px] font-black text-eqc-green uppercase tracking-widest mb-1">
+                  {new Date(currentEvent.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                  {currentEvent.time && <span className="ml-1 text-eqc-muted">· {currentEvent.time}</span>}
+                </p>
+                <h3 className="text-sm font-display font-bold text-eqc-text leading-tight mb-0.5">{currentEvent.title}</h3>
+                <p className="text-[11px] text-eqc-muted leading-snug line-clamp-2">{currentEvent.description}</p>
+              </div>
             </motion.div>
           </AnimatePresence>
         )}
@@ -293,9 +325,55 @@ const EventList = ({ events }: { events: Event[] }) => {
   );
 };
 
+// --- Weather Widget ---
+
+const Forecast7Widget = () => {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!ref.current) return;
+    while (ref.current.firstChild) ref.current.removeChild(ref.current.firstChild);
+    const a = document.createElement('a');
+    a.className = 'weatherwidget-io';
+    a.href = 'https://forecast7.com/en/n31d95115d86/perth/';
+    a.setAttribute('data-label_1', '');
+    a.setAttribute('data-label_2', '');
+    a.setAttribute('data-theme', 'pure');
+    a.setAttribute('data-days', '2');
+    a.setAttribute('data-highcolor', '#1a7a54');
+    a.textContent = 'PERTH Weather';
+    ref.current.appendChild(a);
+    const existing = document.getElementById('weatherwidget-io-js');
+    if (existing) existing.remove();
+    const script = document.createElement('script');
+    script.id = 'weatherwidget-io-js';
+    script.src = 'https://weatherwidget.io/js/widget.min.js';
+    document.body.appendChild(script);
+  }, []);
+  return (
+    <div ref={ref}
+      className="overflow-hidden rounded-xl h-16 w-[min(380px,30vw)] shrink-0 weather-widget-scale"
+    />
+  );
+};
+
 // --- Campus Map ---
 
-const CampusMap = () => {
+const NEARBY_CATEGORY_META: Record<NearbyPlace['category'], { icon: typeof Coffee; title: string; tone: string }> = {
+  cafe:      { icon: Coffee, title: 'Cafes & Shopping', tone: 'text-eqc-green' },
+  transport: { icon: Train,  title: 'Public Transport', tone: 'text-blue-600' },
+  other:     { icon: MapPin, title: 'Other',            tone: 'text-purple-600' },
+};
+
+const CampusMap = ({ places }: { places: NearbyPlace[] }) => {
+  const grouped = useMemo(() => {
+    const out: Record<NearbyPlace['category'], NearbyPlace[]> = { cafe: [], transport: [], other: [] };
+    for (const p of places) out[p.category]?.push(p);
+    return out;
+  }, [places]);
+
+  const visibleGroups = (Object.keys(NEARBY_CATEGORY_META) as NearbyPlace['category'][])
+    .filter(cat => grouped[cat] && grouped[cat].length > 0);
+
   return (
     <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-lg h-full flex flex-col overflow-hidden">
       <div className="flex items-center gap-2 mb-3 shrink-0">
@@ -314,28 +392,31 @@ const CampusMap = () => {
           />
         </div>
 
-        <div className="flex-[2] grid grid-cols-2 gap-2">
-          <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-eqc-green mb-2 flex items-center gap-1">
-              <Coffee size={11} /> Cafes & Shopping
-            </h3>
-            <ul className="text-xs space-y-1 font-medium">
-              <li className="flex justify-between"><span>Gordon St Garage</span> <span className="text-eqc-muted">1m</span></li>
-              <li className="flex justify-between"><span>Pony Express</span> <span className="text-eqc-muted">3m</span></li>
-              <li className="flex justify-between"><span>Watertown Outlets</span> <span className="text-eqc-muted">5m</span></li>
-            </ul>
+        {visibleGroups.length > 0 && (
+          <div className={`flex-[2] grid ${visibleGroups.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-2`}>
+            {visibleGroups.slice(0, 2).map((cat) => {
+              const meta = NEARBY_CATEGORY_META[cat];
+              const Icon = meta.icon;
+              return (
+                <div key={cat} className="bg-gray-50 p-3 rounded-xl border border-gray-100">
+                  <h3 className={`text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-1 ${meta.tone}`}>
+                    <Icon size={11} /> {meta.title}
+                  </h3>
+                  <ul className="text-xs space-y-1 font-medium">
+                    {grouped[cat].slice(0, 4).map((p) => (
+                      <li key={p.id} className="flex justify-between gap-2">
+                        <span className="truncate">{p.name}</span>
+                        {typeof p.walkMinutes === 'number' && (
+                          <span className="text-eqc-muted shrink-0">{p.walkMinutes}m</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
-          <div className="bg-gray-50 p-3 rounded-xl border border-gray-100">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2 flex items-center gap-1">
-              <Train size={11} /> Public Transport
-            </h3>
-            <ul className="text-xs space-y-1 font-medium">
-              <li className="flex justify-between"><span>City West Station</span> <span className="text-eqc-muted">4m</span></li>
-              <li className="flex justify-between"><span>Bus 81, 82, 83, 84</span> <span className="text-eqc-muted">2m</span></li>
-              <li className="flex justify-between"><span>Yellow CAT Bus</span> <span className="text-eqc-muted">3m</span></li>
-            </ul>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -351,11 +432,12 @@ const CampusLifeCarousel = () => {
   useEffect(() => {
     if (items.length <= 1) return;
     setIdx(i => (i >= items.length ? 0 : i));
-    const id = setInterval(() => {
+    const currentDuration = items[idx]?.durationMs ?? settings.carouselSlideDurationMs;
+    const id = setTimeout(() => {
       setIdx(i => (i + 1) % items.length);
-    }, settings.carouselSlideDurationMs);
-    return () => clearInterval(id);
-  }, [items.length, settings.carouselSlideDurationMs]);
+    }, currentDuration);
+    return () => clearTimeout(id);
+  }, [items, idx, settings.carouselSlideDurationMs]);
 
   if (items.length === 0) {
     return (
@@ -370,22 +452,36 @@ const CampusLifeCarousel = () => {
   }
 
   const current = items[idx];
+  const nextIdx = (idx + 1) % items.length;
+  const next = items[nextIdx];
+  const transition = settings.carouselTransition;
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-lg overflow-hidden h-full flex flex-col">
       <div className="flex-1 relative bg-gray-50 min-h-0 overflow-hidden">
         <AnimatePresence mode="wait">
-          <motion.img
-            key={current.id}
-            src={current.imageUrl}
-            alt={current.caption || 'Campus life'}
-            initial={{ x: '100%', opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: '-100%', opacity: 0 }}
-            transition={{ duration: 1, ease: 'easeInOut' }}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          {(() => {
+            const variants = TRANSITION_VARIANTS[transition] || TRANSITION_VARIANTS.slide;
+            return (
+              <motion.img
+                key={current.id}
+                src={current.imageUrl}
+                alt={current.caption || 'Campus life'}
+                loading="lazy"
+                decoding="async"
+                initial={variants.initial}
+                animate={variants.animate}
+                exit={variants.exit}
+                transition={variants.transition}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            );
+          })()}
         </AnimatePresence>
+        {/* Hidden preloader for the next slide so the swap is instant. */}
+        {next && next.id !== current.id && (
+          <img src={next.imageUrl} alt="" aria-hidden className="hidden" loading="eager" decoding="async" />
+        )}
         {current.caption && (
           <div className="absolute bottom-3 left-3 right-3 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-lg text-xs font-medium">
             {current.caption}
@@ -403,7 +499,16 @@ const CampusLifeCarousel = () => {
   );
 };
 
-// --- RSS Ticker (bottom edge) ---
+// motion variants per transition style
+const TRANSITION_VARIANTS = {
+  slide:     { initial: { x: '100%', opacity: 0 }, animate: { x: 0, opacity: 1 }, exit: { x: '-100%', opacity: 0 }, transition: { duration: 1, ease: 'easeInOut' as const } },
+  fade:      { initial: { opacity: 0 },             animate: { opacity: 1 },       exit: { opacity: 0 },             transition: { duration: 0.8 } },
+  crossfade: { initial: { opacity: 0, scale: 1.02 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.98 }, transition: { duration: 1.1, ease: 'easeOut' as const } },
+  zoom:      { initial: { opacity: 0, scale: 1.15 }, animate: { opacity: 1, scale: 1 }, exit: { opacity: 0, scale: 0.92 }, transition: { duration: 0.9 } },
+  kenburns:  { initial: { opacity: 0, scale: 1.0 },  animate: { opacity: 1, scale: 1.08 }, exit: { opacity: 0, scale: 1.12 }, transition: { duration: 8, ease: 'linear' as const } },
+};
+
+// --- RSS Ticker ---
 
 const RSS_SCROLL_DURATIONS = {
   slow: 90,
@@ -417,13 +522,16 @@ const RssTicker = () => {
   if (!settings.rssEnabled || items.length === 0) return null;
 
   const duration = RSS_SCROLL_DURATIONS[settings.rssScrollSpeed] || RSS_SCROLL_DURATIONS.medium;
+  const bg = settings.rssRibbonColor || '#1a3a2a';
+  const textColor = getReadableTextColor(bg);
+  const accent = getAccentTextColor(bg);
 
   return (
-    <div className="backdrop-blur-sm border-t border-white/10 text-white py-2 overflow-hidden shrink-0 group" style={{ backgroundColor: settings.rssRibbonColor || '#1a3a2a' }}>
+    <div className="backdrop-blur-sm border-b border-white/10 py-3 overflow-hidden shrink-0 group" style={{ backgroundColor: bg, color: textColor }}>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-2 shrink-0 px-4 border-r border-white/20">
-          <Rss size={14} className="text-eqc-green" />
-          <span className="text-[10px] font-black uppercase tracking-widest">News</span>
+          <Rss size={18} style={{ color: accent }} />
+          <span className="text-sm font-black uppercase tracking-widest" style={{ color: textColor }}>News</span>
         </div>
         <div className="flex-1 overflow-hidden">
           <div
@@ -431,9 +539,9 @@ const RssTicker = () => {
             style={{ animationDuration: `${duration}s` }}
           >
             {[...items, ...items].map((item, idx) => (
-              <span key={`${item.link}-${idx}`} className="text-sm flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-widest text-eqc-green">{item.source}</span>
-                <span className="opacity-90">{item.title}</span>
+              <span key={`${item.link}-${idx}`} className="text-lg flex items-center gap-3">
+                <span className="text-xs font-black uppercase tracking-widest" style={{ color: accent }}>{item.source}</span>
+                <span className="opacity-95" style={{ color: textColor }}>{item.title}</span>
               </span>
             ))}
           </div>
@@ -450,26 +558,12 @@ const RssTicker = () => {
   );
 };
 
-// --- Mobile View tile (QR for the /mobile route) ---
-
-const MobileViewTile = () => {
-  const url = typeof window !== 'undefined' ? `${window.location.origin}/mobile` : '';
-  return (
-    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-lg h-full flex flex-col items-center justify-center text-center gap-3">
-      <div className="bg-gray-50 rounded-xl border border-gray-100 p-2">
-        <QRCodeSVG value={url} size={88} />
-      </div>
-      <div>
-        <h3 className="text-xl font-display font-bold leading-tight">Mobile View</h3>
-        <p className="text-xs text-eqc-green font-bold mt-1">Scan to view on your phone</p>
-      </div>
-    </div>
-  );
-};
-
 // --- Floor Plan ---
 
 const FloorPlan = () => {
+  const [settings] = useGlobalSettings();
+  const imageUrl = settings.floorPlan?.imageUrl || '/images/eqc-campus-layout.svg';
+  const animate = settings.floorPlan?.hoverAnimation ?? true;
   return (
     <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-lg flex flex-col overflow-hidden h-full">
       <div className="flex items-center gap-2 mb-3 shrink-0">
@@ -477,7 +571,12 @@ const FloorPlan = () => {
         <h2 className="text-lg font-display font-bold">Campus Map</h2>
       </div>
       <div className="flex-1 rounded-xl overflow-hidden border border-gray-100 bg-gray-50 relative flex items-center justify-center">
-        <img src="/images/eqc-campus-layout.svg" alt="Campus Floor Plan" className="w-full h-full object-cover animate-float" referrerPolicy="no-referrer" />
+        <img
+          src={imageUrl}
+          alt="Campus Floor Plan"
+          className={`w-full h-full object-cover ${animate ? 'animate-float' : ''}`}
+          referrerPolicy="no-referrer"
+        />
         <style>{`
           @keyframes float {
             0%, 100% { transform: translateY(0); }
@@ -492,46 +591,32 @@ const FloorPlan = () => {
 
 // --- Footer ---
 
-const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
+const Footer = ({ items }: { items: FooterItem[] }) => {
   const mobileUrl = typeof window !== 'undefined' ? `${window.location.origin}/mobile` : '';
   return (
-    <footer className="bg-white border-t border-gray-100 px-6 py-1.5 flex justify-between items-center text-[11px] text-eqc-muted shrink-0">
-      <div className="flex items-center gap-6">
-        <div className="font-bold tracking-wide flex items-center gap-3">
-          <span className="flex items-center gap-1"><Shield size={12} className="text-eqc-green" />RTO 45758</span>
-          <span className="flex items-center gap-1"><GraduationCap size={12} className="text-eqc-green" />CRICOS 03952E</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <MapPin size={12} className="text-red-500" />
-          <span className="font-medium">2 Gordon St, West Perth WA 6005</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Phone size={12} className="text-eqc-green" />
-          <span className="font-medium">1800 338 883</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Mail size={12} className="text-eqc-green" />
-          <span className="font-medium">team@equinimcollege.com</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <BriefcaseMedical size={12} className="text-red-500" />
-          <span className="font-medium">First Aid: Kitchen</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Flame size={12} className="text-orange-500" />
-          <span className="font-medium">Fire Assembly: Coolgardie St</span>
-        </div>
+    <footer className="bg-white border-t border-gray-100 px-6 py-1.5 flex justify-between items-center text-[11px] text-eqc-muted shrink-0 gap-3">
+      <div className="flex items-center gap-x-5 gap-y-1 flex-wrap min-w-0">
+        {items.map((it) => {
+          const Icon = getLucideIcon(it.icon);
+          return (
+            <div key={it.id} className="flex items-center gap-1.5">
+              <Icon size={12} style={{ color: it.iconColor }} />
+              <span className="font-medium">{it.text}</span>
+            </div>
+          );
+        })}
       </div>
-      <button
-        onClick={onAdmin}
+      <a
+        href="/mobile"
         className="flex items-center gap-2 shrink-0"
-        aria-label="Admin panel"
+        aria-label="Mobile view"
+        data-allow-dirty="true"
       >
         <span className="text-[10px] text-eqc-muted font-medium leading-tight">Scan for<br />mobile version</span>
         <div className="bg-white border border-gray-200 rounded p-1 shrink-0">
           <QRCodeSVG value={mobileUrl} size={44} />
         </div>
-      </button>
+      </a>
     </footer>
   );
 };
@@ -541,10 +626,18 @@ const Footer = ({ onAdmin }: { onAdmin: () => void }) => {
 const SIZE_CLASSES = { sm: 'text-sm', md: 'text-lg', lg: 'text-2xl' } as const;
 const SPEED_DURATIONS = { slow: 60, medium: 30, fast: 18 } as const;
 
+function announcementsForPlacement(announcements: Announcement[], where: 'top' | 'bottom'): Announcement[] {
+  return announcements.filter((ann) => {
+    const p = ann.placements;
+    // Back-compat: announcements created before placements existed default to top.
+    if (!p || (!p.top && !p.bottom)) return where === 'top';
+    return p[where] === true;
+  });
+}
+
 const AnnouncementBanner = ({ announcements }: { announcements: Announcement[] }) => {
   if (announcements.length === 0) return null;
 
-  // Each banner has its own style. Stack them rather than mix in one marquee.
   return (
     <div className="shrink-0 relative z-[60] border-b border-white/10">
       {announcements.map((ann) => {
@@ -593,17 +686,17 @@ const MobileRedirectModal = ({ onDismiss }: { onDismiss: () => void }) => {
   return (
     <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-sm flex items-center justify-center p-5">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden">
-        <a
-          href="/admin"
+        <button
+          type="button"
+          onClick={onDismiss}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-gray-50 hover:bg-gray-100 flex items-center justify-center text-eqc-muted transition-colors"
-          aria-label="Open admin panel"
+          aria-label="Close"
         >
-          {/* Hand-coded cog SVG */}
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
-        </a>
+        </button>
         <div className="p-6 sm:p-7 text-center">
           <img src="/images/eqc-sheild.png" alt="EQC Institute" className="mx-auto w-14 h-14 object-contain mb-4" />
           <h2 className="text-xl font-bold text-eqc-text mb-2 leading-tight">
@@ -613,23 +706,17 @@ const MobileRedirectModal = ({ onDismiss }: { onDismiss: () => void }) => {
             The campus dashboard is built for the lobby screen. On a phone, use the mobile companion view instead.
           </p>
           <a
-            href="/mobile"
+            href="/mobile.html"
             className="block w-full bg-eqc-green text-white font-bold rounded-xl px-5 py-3.5 text-base hover:bg-eqc-green/90 transition-colors mb-3"
           >
             Open Mobile View
           </a>
-          <a
-            href="/trainer-sign-on"
-            className="block w-full bg-gray-100 text-gray-700 font-bold rounded-xl px-5 py-3 text-sm hover:bg-gray-200 transition-colors mb-3"
-          >
-            Trainer Sign-On Portal
-          </a>
           <button
             type="button"
             onClick={onDismiss}
-            className="block w-full text-xs text-eqc-muted hover:text-eqc-text font-medium underline-offset-2 hover:underline transition-colors"
+            className="block w-full bg-gray-100 text-gray-700 font-bold rounded-xl px-5 py-3 text-sm hover:bg-gray-200 transition-colors"
           >
-            View dashboard anyway
+            No thanks
           </button>
         </div>
       </div>
@@ -664,7 +751,6 @@ function useIsMobileViewport(): boolean {
 }
 
 export default function Lobby() {
-  const navigate = useNavigate();
   const [rooms] = useRooms(INITIAL_ROOMS);
   const [events] = useEvents(IS_DEMO_MODE ? DEMO_EVENTS : []);
   const announcements = useAnnouncements();
@@ -695,6 +781,17 @@ export default function Lobby() {
     }
   };
 
+  const footerItems = settings.footerItems && settings.footerItems.length > 0
+    ? settings.footerItems
+    : DEFAULT_FOOTER_ITEMS;
+
+  const nearbyPlaces = settings.nearbyPlaces && settings.nearbyPlaces.length > 0
+    ? settings.nearbyPlaces
+    : DEFAULT_NEARBY_PLACES;
+
+  const topAnnouncements = useMemo(() => announcementsForPlacement(announcements, 'top'), [announcements]);
+  const bottomAnnouncements = useMemo(() => announcementsForPlacement(announcements, 'bottom'), [announcements]);
+
   return (
     <div className="h-screen w-full flex flex-col font-sans overflow-hidden bg-eqc-bg relative">
       {IS_DEMO_MODE && (
@@ -703,7 +800,11 @@ export default function Lobby() {
         </div>
       )}
 
-      <AnnouncementBanner announcements={announcements} />
+      <Header />
+
+      {/* Order: navbar → top alert ribbons → RSS ticker → main content → bottom alert ribbons → footer */}
+      <AnnouncementBanner announcements={topAnnouncements} />
+      <RssTicker />
 
       <button
         onClick={toggleFullscreen}
@@ -712,8 +813,6 @@ export default function Lobby() {
       >
         {isFullscreen ? <Minimize size={16} /> : <Maximize size={16} />}
       </button>
-
-      <Header />
 
       <main className="flex-1 flex flex-col p-5 min-h-0 gap-4">
         <div className="flex-1 flex gap-5 min-h-0">
@@ -738,7 +837,7 @@ export default function Lobby() {
                 <CampusLifeCarousel />
               </div>
               <div className="row-span-2 min-h-0">
-                <CampusMap />
+                <CampusMap places={nearbyPlaces} />
               </div>
               <div className="min-h-0">
                 <EventList events={events} />
@@ -748,9 +847,8 @@ export default function Lobby() {
         </div>
       </main>
 
-      <RssTicker />
-
-      <Footer onAdmin={() => navigate('/admin')} />
+      <AnnouncementBanner announcements={bottomAnnouncements} />
+      <Footer items={footerItems} />
 
       {isMobile && showMobileModal && (
         <MobileRedirectModal onDismiss={dismissMobileModal} />
@@ -761,6 +859,10 @@ export default function Lobby() {
         .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+
+        /* Squeeze the third-party weather iframe so the 2-day forecast fits the chip. */
+        .weather-widget-scale { transform-origin: right center; }
+        .weather-widget-scale iframe { transform: scale(0.92); transform-origin: right center; width: 110%; height: 110%; }
 
         @media (min-aspect-ratio: 16/9) {
           main, header, footer {
