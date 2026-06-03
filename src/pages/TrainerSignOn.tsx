@@ -4,11 +4,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import toast, { Toaster } from 'react-hot-toast';
 import Cropper from 'react-easy-crop';
 import type { Area } from 'react-easy-crop';
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { useRooms, useTrainers } from '../lib/hooks';
 import { getTrainerImagePath, SKELLY_PATH } from '../lib/trainers';
-import { uploadImage, deleteImage, readFileAsDataURL, getCroppedBlob } from '../lib/storage';
+import { uploadImage, readFileAsDataURL, getCroppedBlob } from '../lib/storage';
 import type { RoomAllocation, Trainer } from '../lib/types';
 
 const FIXED_COURSES = ['Cyber Security', 'Back End Web Dev'];
@@ -196,12 +196,11 @@ function PhotoModal({ trainer, onCancel, onSaved }: PhotoModalProps) {
     setUploading(true);
     try {
       const blob = await getCroppedBlob(srcDataUrl, croppedAreaPixels, 512);
+      // Upload to the trainer's canonical path. Firebase overwrites in place, so
+      // the previous file is replaced — do NOT call deleteImage on the old URL:
+      // both URLs point to the same path, so deleting one wipes the new upload.
       const path = `trainers/${trainer.id}.jpg`;
       const photoUrl = await uploadImage(blob, path);
-      // If the URL changed (Firebase may return same path with a new token), delete old.
-      if (trainer.photoUrl && trainer.photoUrl !== photoUrl) {
-        try { await deleteImage(trainer.photoUrl); } catch { /* ignore */ }
-      }
       await setDoc(doc(db, 'trainers', trainer.id), { photoUrl }, { merge: true });
       toast.success('Profile photo updated');
       onSaved();
