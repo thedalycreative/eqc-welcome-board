@@ -1,0 +1,24 @@
+{
+  "pkg": "eqc-perth-campus-dashboard",
+  "globalName": "EQC",
+  "shape": "package",
+  "buildCmd": "npx vite build && cp dist/assets/index-*.css dist/ds-styles.css",
+  "srcDir": "src",
+  "tsconfig": "tsconfig.json",
+  "cssEntry": "dist/ds-styles.css",
+  "readmeHeader": ".design-sync/conventions.md",
+  "componentSrcMap": {
+    "ConfirmDialog": "src/components/ConfirmDialog.tsx",
+    "IconPicker": "src/components/IconPicker.tsx",
+    "EventIcon": "src/lib/eventIcons.tsx"
+  },
+  "docsDir": ".design-sync/docs",
+  "overrides": {
+    "ConfirmDialog": { "cardMode": "single", "primaryStory": "Danger", "viewport": "600x460" }
+  },
+  "dtsPropsFor": {
+    "ConfirmDialog": "/** Controls visibility. The dialog renders nothing when false. */\n  open: boolean;\n  /** Heading shown at the top of the dialog. */\n  title: string;\n  /** Optional body content (string or JSX) shown under the title. */\n  body?: React.ReactNode;\n  /** Primary action button label. Default \"Confirm\". */\n  confirmLabel?: string;\n  /** Cancel button label. Default \"Cancel\". */\n  cancelLabel?: string;\n  /** Visual tone of the icon + primary button. Default \"warning\". */\n  tone?: 'danger' | 'warning' | 'info';\n  /** Called when the primary button is pressed (or Enter). */\n  onConfirm: () => void;\n  /** Called when Cancel, the backdrop, the close button, or Escape fires. */\n  onCancel: () => void;\n  /** Optional middle button label (e.g. \"Save changes\" in a 3-way dialog). */\n  altLabel?: string;\n  /** Called when the optional middle button is pressed. */\n  onAlt?: () => void;",
+    "IconPicker": "/** Currently selected lucide icon name (controlled). */\n  value?: string;\n  /** Called with the chosen lucide icon name. */\n  onChange: (name: string) => void;\n  /** Icon shown on the trigger button when no value is selected. Defaults to a Smile. */\n  triggerFallbackIcon?: React.ReactNode;\n  /** Optional label rendered next to the icon on the trigger. */\n  triggerLabel?: string;\n  /** Hex color for the thin ring around the trigger and selected grid cell. Default \"#1a7a54\". */\n  accentColor?: string;",
+    "EventIcon": "/** Lucide icon name (e.g. \"Calendar\", \"Bell\"). Falls back to Calendar when unknown or empty. */\n  name?: string;\n  /** Icon size in px. Default 18. */\n  size?: number;\n  /** Extra classes applied to the rendered icon (e.g. \"text-eqc-green\"). */\n  className?: string;"
+  }
+}
