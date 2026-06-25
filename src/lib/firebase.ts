@@ -2,15 +2,20 @@ import { initializeApp } from "firebase/app";
 import { initializeFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// Firebase config - safe to expose, this is the public client config.
-// Security is enforced by Firestore rules, not by hiding these values.
+function required(name: string, value: string | undefined): string {
+  if (!value) {
+    throw new Error(`Missing required env var: ${name}. Set it in your environment before building.`);
+  }
+  return value;
+}
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyAFB1f3hrr1nPtH_DDG6fkAq_VhkjDUBP4",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "eqc-dashboard-by-25g.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "eqc-dashboard-by-25g",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "eqc-dashboard-by-25g.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "53462073983",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:53462073983:web:865a9336b39e3d4ec7f54a",
+  apiKey: required("VITE_FIREBASE_API_KEY", import.meta.env.VITE_FIREBASE_API_KEY),
+  authDomain: required("VITE_FIREBASE_AUTH_DOMAIN", import.meta.env.VITE_FIREBASE_AUTH_DOMAIN),
+  projectId: required("VITE_FIREBASE_PROJECT_ID", import.meta.env.VITE_FIREBASE_PROJECT_ID),
+  storageBucket: required("VITE_FIREBASE_STORAGE_BUCKET", import.meta.env.VITE_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: required("VITE_FIREBASE_MESSAGING_SENDER_ID", import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID),
+  appId: required("VITE_FIREBASE_APP_ID", import.meta.env.VITE_FIREBASE_APP_ID),
 };
 
 export const app = initializeApp(firebaseConfig);
@@ -19,4 +24,4 @@ export const db = initializeFirestore(app, {
 });
 export const storage = getStorage(app);
 
-export const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || "Trainer";
+export const ADMIN_PASSWORD = required("VITE_ADMIN_PASSWORD", import.meta.env.VITE_ADMIN_PASSWORD);

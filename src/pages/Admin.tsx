@@ -28,9 +28,6 @@ const MOBILE_URL = `${import.meta.env.BASE_URL}mobile`;
 const STORAGE_KEY = 'eqc-admin-auth';
 const ACTOR_KEY = 'eqc-admin-actor';
 
-// Universal admin passwords accepted alongside the env-configured one.
-const UNIVERSAL_ADMIN_PASSWORDS = ['Admin', 'asdf'];
-
 const NAV_TABS = [
   { path: '/admin/rooms', label: 'Rooms', icon: Layout },
   { path: '/admin/events', label: 'Events', icon: Calendar },
@@ -51,9 +48,7 @@ function LoginGate({ onSuccess }: { onSuccess: () => void }) {
   const handleLogin = (e: FormEvent) => {
     e.preventDefault();
     const trimmed = password;
-    const isAdmin =
-      trimmed === ADMIN_PASSWORD ||
-      UNIVERSAL_ADMIN_PASSWORDS.includes(trimmed);
+    const isAdmin = trimmed === ADMIN_PASSWORD;
 
     if (isAdmin) {
       sessionStorage.setItem(STORAGE_KEY, 'ok');
@@ -111,7 +106,7 @@ function LoginGate({ onSuccess }: { onSuccess: () => void }) {
               placeholder="Enter your password"
             />
             <p className="text-xs text-gray-400 mt-2">
-              Admins use the universal password. Trainers use the personal password from the Trainers tab.
+              Admins use the configured admin password. Trainers use the personal password from the Trainers tab.
             </p>
           </div>
           <button type="submit" className="w-full bg-eqc-green text-white py-3 min-h-[48px] rounded-xl font-bold hover:bg-eqc-green/90 transition-colors flex items-center justify-center gap-2">

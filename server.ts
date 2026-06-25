@@ -20,13 +20,11 @@ async function startServer() {
 
   // Cloud Run injects PORT; fall back to 3000 for local dev.
   const PORT = parseInt(process.env.PORT || "3000", 10);
-  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "asdf";
+  const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
-  if (ADMIN_PASSWORD === "asdf") {
-    console.warn(
-      "[warn] ADMIN_PASSWORD is using the development default. " +
-      "Set ADMIN_PASSWORD in the environment before deploying."
-    );
+  if (!ADMIN_PASSWORD) {
+    console.error("[fatal] ADMIN_PASSWORD env var is required. Refusing to start.");
+    process.exit(1);
   }
 
   app.use(express.json());
