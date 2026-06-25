@@ -1,0 +1,13 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public lobby display needs read access to render rooms, events,
+    // trainers, settings, etc. Writes are intentionally blocked here —
+    // any admin or sign-on action must go through an authenticated path
+    // (Firebase Auth or a server-side function using the Admin SDK).
+    match /{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
