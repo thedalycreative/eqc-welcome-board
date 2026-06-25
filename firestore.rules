@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // PUBLIC READ + WRITE.
+    //
+    // The trainer sign-on portal and admin panel are unauthenticated
+    // clients that write directly to Firestore — there is no Firebase
+    // Auth or server-side endpoint in front of them. Denying writes
+    // here breaks every interactive feature.
+    //
+    // The intended security boundary lives outside these rules:
+    //   - HTTP-referrer restriction on the Web API key (Google Cloud
+    //     console → APIs & Services → Credentials), pinning use to
+    //     perth-eqc.xyz and the Vercel preview hosts. This is what
+    //     prevents the leaked key being abused from other origins.
+    //   - VITE_ADMIN_PASSWORD gate on the admin UI.
+    //
+    // To lock these rules down later, introduce Firebase Anonymous
+    // Auth, sign the client in on boot, and switch the writes here to
+    // `allow write: if request.auth != null;`.
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

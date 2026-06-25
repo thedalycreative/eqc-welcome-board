@@ -1,0 +1,5 @@
+{
+  "name": "EQC Perth Campus Dashboard",
+  "description": "A live lobby dashboard showing room allocations, weather, and upcoming events.",
+  "requestFramePermissions": []
+}

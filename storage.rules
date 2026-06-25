@@ -1,0 +1,11 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Public read + write for trainer photo and carousel image uploads
+    // from the unauthenticated admin / sign-on clients. See firestore.rules
+    // for the rationale and follow-up plan to add Firebase Anonymous Auth.
+    match /{allPaths=**} {
+      allow read, write: if true;
+    }
+  }
+}
