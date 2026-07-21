@@ -3,12 +3,11 @@ import { Layout, Plus, X, Trash2, ExternalLink, CheckCircle, AlertCircle, Coffee
 import { motion, AnimatePresence } from 'motion/react';
 import { doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { useRooms, useTrainers, useSignOnLog, writeResetLog } from '../../lib/hooks';
+import { useRooms, useTrainers, useSignOnLog, useIntakes, writeResetLog, writeAdminUpdateLog } from '../../lib/hooks';
 import { getTrainerImagePath } from '../../lib/trainers';
 import { useUnsavedChangesPrompt } from '../../hooks/useUnsavedChangesPrompt';
-import { formatIntake, parseIntake } from '../../lib/intake';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import type { RoomAllocation, Trainer } from '../../lib/types';
+import type { RoomAllocation, Trainer, Intake } from '../../lib/types';
 
 const TRAINER_SIGN_ON_URL = `${import.meta.env.BASE_URL}trainer-sign-on.html`;
 
@@ -163,78 +162,48 @@ function TrainerAutocomplete({
   );
 }
 
-// --- Intake double-input ---
+// --- Intake dropdown (fed from the Intakes admin tab) ---
 
-function IntakeInput({
-  value, onChange, disabled,
+function IntakeSelect({
+  value, onChange, intakes, disabled,
 }: {
   value: string;
-  onChange: (combined: string, valid: boolean) => void;
+  onChange: (v: string) => void;
+  intakes: Intake[];
   disabled?: boolean;
 }) {
-  const initialParts = parseIntake(value);
-  const [digits, setDigits] = useState(initialParts.digits);
-  const [letter, setLetter] = useState(initialParts.letter);
-  const [touched, setTouched] = useState(false);
-
-  useEffect(() => {
-    const next = parseIntake(value);
-    setDigits(next.digits);
-    setLetter(next.letter);
-  }, [value]);
-
-  const commit = (d: string, l: string) => {
-    const formatted = formatIntake(d, l);
-    onChange(formatted ?? '', formatted !== null);
-  };
-
-  const error = touched && (digits || letter) && !formatIntake(digits, letter);
+  const options = intakes.filter(i => i.active).map(i => i.label);
+  // A legacy value not present in the intakes list still needs to render.
+  const hasLegacyValue = !!value && !options.includes(value);
 
   return (
-    <div className="flex items-center gap-1">
-      <input
-        value={digits}
-        onChange={(e) => {
-          const v = e.target.value.replace(/\D/g, '').slice(0, 2);
-          setDigits(v); setTouched(true); commit(v, letter);
-        }}
-        onBlur={() => setTouched(true)}
-        placeholder="25"
-        disabled={disabled}
-        maxLength={2}
-        inputMode="numeric"
-        className={`w-12 px-2 py-1.5 border rounded text-sm bg-white text-center font-bold tabular-nums disabled:bg-gray-50 disabled:text-gray-400 ${
-          error ? 'border-red-300' : 'border-gray-200'
-        }`}
-      />
-      <span className="text-eqc-muted font-bold">.</span>
-      <input
-        value={letter}
-        onChange={(e) => {
-          const v = e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 1);
-          setLetter(v); setTouched(true); commit(digits, v);
-        }}
-        onBlur={() => setTouched(true)}
-        placeholder="G"
-        disabled={disabled}
-        maxLength={1}
-        className={`w-10 px-2 py-1.5 border rounded text-sm bg-white text-center font-bold uppercase disabled:bg-gray-50 disabled:text-gray-400 ${
-          error ? 'border-red-300' : 'border-gray-200'
-        }`}
-      />
-      {error && (
-        <span className="text-[10px] text-red-500 font-bold ml-1" title="Intake must be 2 digits + 1 letter (e.g. 25.G)">
-          !
-        </span>
-      )}
-    </div>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
+      className="w-full px-2 py-1.5 border border-gray-200 rounded text-sm bg-white font-bold disabled:bg-gray-50 disabled:text-gray-400"
+      title={options.length === 0 ? 'Add intakes in the Intakes tab first' : undefined}
+    >
+      <option value="">—</option>
+      {hasLegacyValue && <option value={value}>{value}</option>}
+      {options.map(label => <option key={label} value={label}>{label}</option>)}
+    </select>
   );
+}
+
+function currentActorName(): string {
+  try {
+    const actor = JSON.parse(sessionStorage.getItem('eqc-admin-actor') || 'null');
+    if (actor?.kind === 'trainer' && actor.name) return `${actor.name} (admin panel)`;
+  } catch { /* fall through */ }
+  return 'Admin panel';
 }
 
 export default function AdminRooms() {
   const [rooms] = useRooms(INITIAL_ROOMS);
   const trainers = useTrainers();
   const signOnLog = useSignOnLog();
+  const intakes = useIntakes();
   const [draftRooms, setDraftRooms] = useState<RoomAllocation[]>(rooms);
   const [statusMessage, setStatusMessage] = useState<StatusMsg>(null);
   const [dirty, setDirty] = useState(false);
@@ -318,7 +287,16 @@ export default function AdminRooms() {
 
   const handleSave = async () => {
     try {
+      const changed = draftRooms.filter(dr => {
+        const orig = rooms.find(r => r.id === dr.id);
+        return !orig || JSON.stringify(orig) !== JSON.stringify(dr);
+      });
       await persist(draftRooms);
+      const changedNames = changed.map(r => r.roomName).join(', ');
+      await writeAdminUpdateLog(
+        currentActorName(),
+        changed.length > 0 ? `Room allocations updated — ${changedNames}` : 'Room allocations saved'
+      );
       setDirty(false);
       setStatusMessage({ text: 'Room changes saved.', type: 'success' });
     } catch {
@@ -333,7 +311,9 @@ export default function AdminRooms() {
   };
 
   const handleResetAllConfirmed = async () => {
-    const reset = rooms.map(r => ({ ...r, status: 'inactive' as const, course: undefined, trainer: undefined, intake: undefined, topic: undefined, breakUntil: undefined, trainerId: undefined }));
+    // Rooms go back to "available" (light green on the lobby) — NOT "inactive",
+    // which the lobby renders as "Signed off".
+    const reset = rooms.map(r => ({ ...r, status: 'available' as const, course: undefined, trainer: undefined, intake: undefined, topic: undefined, breakUntil: undefined, trainerId: undefined }));
     try {
       await persist(reset);
       await writeResetLog('manual', reset.length);
@@ -436,9 +416,10 @@ export default function AdminRooms() {
                   suggestions={existingCourses}
                   placeholder={placeholderForRow(idx, COURSE_EG)}
                 />
-                <IntakeInput
+                <IntakeSelect
                   value={room.intake || ''}
                   onChange={(v) => updateDraft(idx, 'intake', v)}
+                  intakes={intakes}
                 />
                 <AutocompleteInput
                   value={room.topic || ''}
@@ -519,7 +500,7 @@ export default function AdminRooms() {
         open={confirmAction?.kind === 'reset-all'}
         tone="warning"
         title="Reset all rooms?"
-        body="This will clear every room back to inactive and discard course/trainer details on every row. The action cannot be undone."
+        body="This will set every room back to available and discard course/trainer details on every row. The action cannot be undone."
         confirmLabel="Reset all"
         cancelLabel="Cancel"
         onCancel={() => setConfirmAction(null)}

@@ -8,6 +8,7 @@ import AdminRooms from './pages/admin/Rooms';
 import AdminEvents from './pages/admin/Events';
 import AdminAlerts from './pages/admin/Alerts';
 import AdminTrainers from './pages/admin/Trainers';
+import AdminIntakes from './pages/admin/Intakes';
 import AdminCarousel from './pages/admin/Carousel';
 import AdminSignOnLog from './pages/admin/SignOnLog';
 import AdminRssFeeds from './pages/admin/RssFeeds';
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="alerts" element={<AdminAlerts />} />
           <Route path="carousel" element={<AdminCarousel />} />
           <Route path="trainers" element={<AdminTrainers />} />
+          <Route path="intakes" element={<AdminIntakes />} />
           <Route path="signon-log" element={<AdminSignOnLog />} />
           <Route path="rss" element={<AdminRssFeeds />} />
           <Route path="settings" element={<AdminSettings />} />

@@ -11,6 +11,7 @@ import type {
   SignOnLogEntry,
   RssFeed,
   GlobalSettings,
+  Intake,
 } from './types';
 import { DEFAULT_SETTINGS } from './types';
 
@@ -93,6 +94,22 @@ export function useTrainers() {
   }, []);
 
   return trainers;
+}
+
+export function useIntakes() {
+  const [intakes, setIntakes] = useState<Intake[]>([]);
+
+  useEffect(() => {
+    if (IS_DEMO_MODE) return;
+    const unsub = onSnapshot(collection(db, 'intakes'), (snapshot) => {
+      const data = snapshot.docs.map(d => d.data() as Intake);
+      data.sort((a, b) => a.label.localeCompare(b.label));
+      setIntakes(data);
+    });
+    return unsub;
+  }, []);
+
+  return intakes;
 }
 
 export function useCarousel() {
@@ -226,10 +243,32 @@ export async function writeResetLog(source: 'auto' | 'manual', roomsAffected: nu
         ? `Daily reset — ${roomsAffected} room${roomsAffected === 1 ? '' : 's'} cleared`
         : `Manual reset — ${roomsAffected} room${roomsAffected === 1 ? '' : 's'} cleared`,
       action: 'reset',
+      source,
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
     console.error('Failed to write reset log:', err);
+  }
+}
+
+/**
+ * Logs a save made from the admin panel (e.g. Manage Room Allocations) so the
+ * Sign-On Log shows who changed what outside the trainer sign-on flow.
+ */
+export async function writeAdminUpdateLog(actorName: string, summary: string, roomNumber: string = 'Admin') {
+  try {
+    const id = `log_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    await setDoc(doc(db, 'signOnLog', id), {
+      id,
+      trainerName: actorName,
+      roomNumber,
+      intakeNumber: '—',
+      course: summary,
+      action: 'admin-update',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.error('Failed to write admin update log:', err);
   }
 }
 
