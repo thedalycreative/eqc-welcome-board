@@ -193,13 +193,36 @@ const RoomItem: React.FC<{ room: RoomAllocation; trainers: Trainer[] }> = ({ roo
             <span className="font-sans font-semibold text-xl leading-none italic">On Break</span>
           </>
         ) : isAvailable ? (
-          <span className="font-sans text-base leading-none italic">Available for study</span>
+          <>
+            {/* Ghost of the trainer profile dot */}
+            <svg width="56" height="56" viewBox="0 0 56 56" className="shrink-0" aria-hidden>
+              <circle cx="28" cy="28" r="26" fill="white" fillOpacity="0.6" stroke="#86efac" strokeWidth="2" strokeDasharray="5 4" />
+              <circle cx="28" cy="22" r="8" fill="#bbf7d0" />
+              <path d="M13 46 a15 11 0 0 1 30 0" fill="#bbf7d0" />
+            </svg>
+            <span className="font-sans text-base leading-none italic">Available for study</span>
+          </>
         ) : (
           <span className="font-sans text-base leading-none italic opacity-80">—</span>
         )}
       </div>
 
       <div className="flex items-center gap-5">
+        {isAvailable && (
+          /* Ghosts of the course/topic lines and the intake number */
+          <>
+            <svg width="180" height="28" viewBox="0 0 180 28" className="shrink-0" aria-hidden>
+              <rect x="40" y="2" width="140" height="8" rx="4" fill="#bbf7d0" />
+              <rect x="90" y="17" width="90" height="9" rx="4.5" fill="#86efac" fillOpacity="0.7" />
+            </svg>
+            <svg width="88" height="44" viewBox="0 0 88 44" className="shrink-0" aria-hidden>
+              <rect x="1" y="1" width="86" height="42" rx="10" fill="white" fillOpacity="0.5" stroke="#86efac" strokeWidth="2" strokeDasharray="6 4" />
+              <rect x="12" y="16" width="26" height="12" rx="4" fill="#bbf7d0" />
+              <circle cx="47" cy="26" r="2.5" fill="#86efac" />
+              <rect x="56" y="16" width="20" height="12" rx="4" fill="#bbf7d0" />
+            </svg>
+          </>
+        )}
         {hasContent && (room.course || room.topic) && (
           <div className="flex flex-col items-end gap-0.5 text-right">
             {room.course && (

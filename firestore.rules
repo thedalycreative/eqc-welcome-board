@@ -23,6 +23,9 @@ service cloud.firestore {
     match /trainers/{doc} {
       allow read, write: if true;
     }
+    match /intakes/{doc} {
+      allow read, write: if true;
+    }
     match /carousel/{doc} {
       allow read, write: if true;
     }

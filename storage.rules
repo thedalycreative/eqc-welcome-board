@@ -11,5 +11,8 @@ service firebase.storage {
     match /carousel/{file=**} {
       allow read, write: if true;
     }
+    match /floorplan/{file=**} {
+      allow read, write: if true;
+    }
   }
 }

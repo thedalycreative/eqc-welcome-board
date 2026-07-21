@@ -85,10 +85,21 @@ export interface SignOnLogEntry {
   intakeNumber: string;
   course: string;
   topics?: string;             // course topic for the session
-  action: 'sign-on' | 'sign-off' | 'reset';
+  action: 'sign-on' | 'sign-off' | 'reset' | 'admin-update';
+  source?: 'auto' | 'manual';  // for resets: nightly auto vs Reset All button
   timestamp: string;
   breakMinutes?: number;       // duration of any break (15/30/45/60)
   signOffTimestamp?: string;   // matched sign-off if present
+}
+
+export interface Intake {
+  id: string;
+  label: string;        // canonical "XX.X" form, e.g. "25.G"
+  courseName?: string;
+  startDate?: string;   // "YYYY-MM-DD"
+  notes?: string;
+  active: boolean;
+  createdAt: string;
 }
 
 export interface RssFeed {
